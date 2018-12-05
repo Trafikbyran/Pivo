@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script>
+		$( document ).ready(function() {
+			$.ajax({
+			    url: "xml.xml",
+			    type: "GET",
+			    dataType: "xml",
+			    success: function (xml) {
+			    	// console.log(xml);
+			    	var pivo = [];
+					$(xml).find('artikel').each(function(){
+						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
+							var name = $(this).find('Namn').text();
+							var subline = $(this).find('Namn2').text();
+							var brewery = $(this).find('Producent').text();
+							var type = $(this).find('Typ').text();
+
+							var output ='<li class="pivo">';
+							output += '<span class="type">' + type + '</span>' ;
+							if (subline){
+								output += '<strong>' + name + '<i> - ' + subline + '</i>'; 
+							} else {
+								output += '<strong>' + name ;
+							}
+							output += '<span> | ' + $(this).find('Alkoholhalt').text() + '</span></strong>';
+							output += '<span> av: ' + brewery + '</span></br>';
+							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + name + ' ' + subline;
+							
+							// output += '<button class="tap" data-url="' + search +'">Rate</button>';
+							output += '<div class="response">';
+							var rating = searchRating(search);
+							if (rating){
+								output += rating;
+								output += '</div></lI>';
+								pivo.push(output);
+							} else {
+								output += '<div class="rating">Failed to load</div></div></lI>';
+								pivo.push(output);
+								return false;
+							}
+						}
+					});
+					$("#main").html(pivo);
+			    },
+			    error: function () {
+			    	$("#main").html('failed');
+			    }
+			});
+			$("#main").html('loading...');
+
+			$('#main').on('click','.tap',function(){
+				var beer = $(this).attr('data-url');
+				// console.log(beer);
+				var target = $(this).parent().find('.response');
+				searchRating(beer, target);
+				// rating(beer, target);
+			})
+
+			function rating(dataurl){
+				var output = '<span>Noa av: Omnipollo<br></span><div class="rating">4.234</div>';
+				return output;
+			}
+
+			function searchRating(dataurl){
+				// console.log(dataurl);
+				$.ajax({
+				    url: dataurl,
+				    type: "GET",
+				    success: function (data) {
+				    	if(data.response.beers.count > 0) {
+				    		$.ajax({
+							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
+							    type: "GET",
+							    success: function (data) {
+							    	// console.log(data.response.beer['rating_score']);
+							    	// console.log(data.response.beer['beer_name']);
+							    	// console.log(data.response.beer.brewery['brewery_name']);
+							    	// console.log(data.response.beer);
+						    		var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
+						    		// target.append(output);	
+						    		return output;			    	
+
+							    },
+							    error: function () {
+							    	return false
+							    	// $("#main").html('failed');
+							    }
+							});
+				    	} else {
+				    		var output = '<div class="rating">Ölen hittades inte..</div>';
+				    		target.append(output);
+				    	}
+				    },
+				    error: function () {
+				    	return false
+				    	// $("#main").html('failed');
+				    }
+				});
+			}
+			
+			// $.ajax({
+			//     url: "https://api.untappd.com/v4/beer/info/16630/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
+			//     type: "GET",
+			//     success: function (data) {
+			//     	console.log(data.response.beer['rating_score']);
+			//     },
+			//     error: function () {
+			//     	$("#main").html('failed');
+			//     }
+			// });
+		});
+	</script>
+	<style>
+		body {
+			margin: 0;
+		}
+		#main {
+			margin: 0;
+			padding: 0;
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+			-webkit-flex-wrap: wrap;
+			-moz-flex-wrap: wrap;
+			-ms-flex-wrap: wrap;
+			-o-flex-wrap: wrap;
+			flex-wrap: wrap;
+			-ms-align-items: center;
+			align-items: center;
+		}
+		.pivo {
+			list-style: none;
+			background: #333;
+			min-height: 200px;
+			width: 300px;
+			text-align: center;
+			color: #ccc;
+			margin: 10px;
+			padding: 30px 10px 10px 10px;
+			position: relative;
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+			-webkit-flex-direction: column;
+			-moz-flex-direction: column;
+			-ms-flex-direction: column;
+			-o-flex-direction: column;
+			flex-direction: column;
+			justify-content: flex-start;
+			font-family: 'Helvetica';
+		}
+		.pivo strong {
+			display: block;
+			font-size: 0.9em;
+			font-weight: 300;
+		}
+		.pivo strong i {
+			/*font-weight: 400;*/
+		}
+		.pivo span {
+			font-size: 0.7em;
+			/*text-transform: uppercase;*/
+			font-weight: 400;
+		}
+		span.type {
+			font-style: italic;
+			font-size: 0.7em;
+		}
+		.tap {
+			display: block;
+			margin: 10px auto;
+			color: #ccc;
+			border: 1px solid #ccc;
+			padding: 2px 15px;
+			font-size: 0.8em;
+			background: transparent;
+			cursor: pointer;
+		}
+		.tap:focus, .tap,hover {
+			outline: none;
+		}
+		.response {
+			width: 100%;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+		} 
+		.response .rating {
+			background: gold;
+			padding: 20px 10px;
+			color: #333;
+		}
+		.response .rating span{
+			display: block;
+			font-size: 0.6em;
+			text-transform: uppercase;
+		}
+		
+	</style>
+	<meta charset="UTF-8">
+	<title>Pivo</title>
+</head>
+<body>
+	<ul id="main">
+		
+	</ul>
+</body>
+</html>
