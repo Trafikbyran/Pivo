@@ -9,8 +9,8 @@
 			    type: "GET",
 			    dataType: "xml",
 			    success: function (xml) {
-			    	console.log(xml);
-			    	var beerlist = [];
+			    	// console.log(xml);
+			    	var beerlist = [{}];
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
 							var id = $(this).find('Artikelid').text();
@@ -18,35 +18,51 @@
 							var subline = $(this).find('Namn2').text();
 							var brewery = $(this).find('Producent').text();
 							var type = $(this).find('Typ').text();
+							var rating = 1;
+							if (localStorage.getItem(id)) {
+								// console.log(JSON.parse(localStorage.getItem(id)).ratingScore);
+								rating = JSON.parse(localStorage.getItem(id)).ratingScore;
+								// console.log(localStorage.getItem(id).rating);
+							} 
+							var beer = {
+								output: '<li class="pivo" data-rating="' + rating + '">',
+								rating: rating
+							};
 
-							var output ='<li class="pivo">';
-							output += '<span class="type">' + type + '</span>' ;
+
+							beer.output += '<span class="type">' + type + '</span>' ;
 							if (subline){
-								output += '<strong>' + name + '<i> - ' + subline + '</i>'; 
+								beer.output += '<strong>' + name + '<i> - ' + subline + '</i>'; 
 							} else {
-								output += '<strong>' + name ;
+								beer.output += '<strong>' + name ;
 							}
-							output += '<span> | ' + $(this).find('Alkoholhalt').text() + '</span></strong>';
-							output += '<span> av: ' + brewery + '</span></br>';
+							beer.output += '<span> | ' + $(this).find('Alkoholhalt').text() + '</span></strong>';
+							beer.output += '<span> av: ' + brewery + '</span></br>';
 							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + name + ' ' + subline;
-							output += '<button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
+							beer.output += '<button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
 							if(localStorage.getItem(id)){
-								output += '<div class="response">' + localStorage.getItem(id) + '</div></lI>';
+								beer.output += '<div class="response"><div class="rating">' + JSON.parse(localStorage.getItem(id)).ratingScore + '<span>på ' + JSON.parse(localStorage.getItem(id)).ratingCount + ' ratings</span></div></div></lI>';
 							} else {
-								
-								output += '<div class="response"></div></lI>';
+								beer.output += '<div class="response"></div></lI>';
 							}
-							
-							beerlist.push(output);
+							// console.log(beer);
+							beerlist.push(beer);
 						}
 					});
-					$("#main").html(beerlist);
+					beerlist.sort(function(a , b){
+						return b.rating - a.rating;
+					});
+					$.each(beerlist, function(i, val){
+						// console.log(val.output);
+						$("#main").append(val.output);
+					})
+					
+					// $("#main").html(beerlist);
 			    },
 			    error: function () {
 			    	$("#main").html('failed');
 			    }
 			});
-			$("#main").html('loading...');
 
 			$('#main').on('click','.tap',function(){
 				var beerUrl = $(this).attr('data-url');
@@ -78,10 +94,12 @@
 							    	// console.log(data.response.beer['beer_name']);
 							    	// console.log(data.response.beer.brewery['brewery_name']);
 							    	console.log(data.response.beer);
-						    		var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
+							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
+						    		var beerRating = { 
+						    			ratingCount: data.response.beer['rating_count'],
+						    			ratingScore: data.response.beer['rating_score']}
 						    		target.append(output);	
-						    		localStorage.setItem(dataid,output);
-						    		// createCookie("cookie-name", "cookie-value", 30);
+						    		localStorage.setItem(dataid,JSON.stringify(beerRating));
 
 							    },
 							    error: function () {
@@ -89,7 +107,11 @@
 							    }
 							});
 				    	} else {
+				    		var beerRating = { 
+				    			ratingCount: 0,
+				    			ratingScore: 0}
 				    		var output = '<div class="rating">Ölen hittades inte..</div>';
+				    		localStorage.setItem(dataid,JSON.stringify(beerRating));
 				    		target.append(output);
 				    	}
 				    },
