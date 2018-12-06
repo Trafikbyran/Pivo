@@ -10,7 +10,7 @@
 			    dataType: "xml",
 			    success: function (xml) {
 			    	// console.log(xml);
-			    	var pivo = [];
+			    	var beerlist = [];
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
 							var name = $(this).find('Namn').text();
@@ -29,21 +29,12 @@
 							output += '<span> av: ' + brewery + '</span></br>';
 							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + name + ' ' + subline;
 							
-							// output += '<button class="tap" data-url="' + search +'">Rate</button>';
-							output += '<div class="response">';
-							var rating = searchRating(search);
-							if (rating){
-								output += rating;
-								output += '</div></lI>';
-								pivo.push(output);
-							} else {
-								output += '<div class="rating">Failed to load.. probbaly cause the API request limit</div></div></lI>';
-								pivo.push(output);
-								return false;
-							}
+							output += '<button class="tap" data-url="' + search +'">Rate</button>';
+							output += '<div class="response"></div></lI>';
+							beerlist.push(output);
 						}
 					});
-					$("#main").html(pivo);
+					$("#main").html(beerlist);
 			    },
 			    error: function () {
 			    	$("#main").html('failed');
@@ -64,12 +55,13 @@
 				return output;
 			}
 
-			function searchRating(dataurl){
+			function searchRating(dataurl, target){
 				// console.log(dataurl);
 				$.ajax({
 				    url: dataurl,
 				    type: "GET",
 				    success: function (data) {
+				    	console.log(data);
 				    	if(data.response.beers.count > 0) {
 				    		$.ajax({
 							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
@@ -80,13 +72,11 @@
 							    	// console.log(data.response.beer.brewery['brewery_name']);
 							    	// console.log(data.response.beer);
 						    		var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
-						    		// target.append(output);	
-						    		return output;			    	
+						    		target.append(output);	
 
 							    },
 							    error: function () {
 							    	return false
-							    	// $("#main").html('failed');
 							    }
 							});
 				    	} else {
@@ -94,23 +84,14 @@
 				    		target.append(output);
 				    	}
 				    },
-				    error: function () {
+				    error: function (data) {
+				    	console.log(data);
+				    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
+				    	target.append(output);
 				    	return false
-				    	// $("#main").html('failed');
 				    }
 				});
 			}
-			
-			// $.ajax({
-			//     url: "https://api.untappd.com/v4/beer/info/16630/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
-			//     type: "GET",
-			//     success: function (data) {
-			//     	console.log(data.response.beer['rating_score']);
-			//     },
-			//     error: function () {
-			//     	$("#main").html('failed');
-			//     }
-			// });
 		});
 	</script>
 	<style>
