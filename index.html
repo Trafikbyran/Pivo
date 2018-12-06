@@ -9,10 +9,11 @@
 			    type: "GET",
 			    dataType: "xml",
 			    success: function (xml) {
-			    	// console.log(xml);
+			    	console.log(xml);
 			    	var beerlist = [];
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
+							var id = $(this).find('Artikelid').text();
 							var name = $(this).find('Namn').text();
 							var subline = $(this).find('Namn2').text();
 							var brewery = $(this).find('Producent').text();
@@ -28,9 +29,14 @@
 							output += '<span> | ' + $(this).find('Alkoholhalt').text() + '</span></strong>';
 							output += '<span> av: ' + brewery + '</span></br>';
 							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + name + ' ' + subline;
+							output += '<button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
+							if(localStorage.getItem(id)){
+								output += '<div class="response">' + localStorage.getItem(id) + '</div></lI>';
+							} else {
+								
+								output += '<div class="response"></div></lI>';
+							}
 							
-							output += '<button class="tap" data-url="' + search +'">Rate</button>';
-							output += '<div class="response"></div></lI>';
 							beerlist.push(output);
 						}
 					});
@@ -43,10 +49,11 @@
 			$("#main").html('loading...');
 
 			$('#main').on('click','.tap',function(){
-				var beer = $(this).attr('data-url');
+				var beerUrl = $(this).attr('data-url');
+				var beerId = $(this).attr('data-id');
 				// console.log(beer);
 				var target = $(this).parent().find('.response');
-				searchRating(beer, target);
+				searchRating(beerUrl, beerId, target);
 				// rating(beer, target);
 			})
 
@@ -55,7 +62,7 @@
 				return output;
 			}
 
-			function searchRating(dataurl, target){
+			function searchRating(dataurl, dataid, target){
 				// console.log(dataurl);
 				$.ajax({
 				    url: dataurl,
@@ -70,9 +77,11 @@
 							    	// console.log(data.response.beer['rating_score']);
 							    	// console.log(data.response.beer['beer_name']);
 							    	// console.log(data.response.beer.brewery['brewery_name']);
-							    	// console.log(data.response.beer);
+							    	console.log(data.response.beer);
 						    		var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
 						    		target.append(output);	
+						    		localStorage.setItem(dataid,output);
+						    		// createCookie("cookie-name", "cookie-value", 30);
 
 							    },
 							    error: function () {
