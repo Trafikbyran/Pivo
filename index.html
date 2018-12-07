@@ -4,6 +4,7 @@
 	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script>
 		$( document ).ready(function() {
+			var savedBeers = [{}];
 			$.ajax({
 			    url: "xml.xml",
 			    type: "GET",
@@ -20,9 +21,15 @@
 							var type = $(this).find('Typ').text();
 							var rating = 1;
 							if (localStorage.getItem(id)) {
-								// console.log(JSON.parse(localStorage.getItem(id)).ratingScore);
+								var saveBeer = {
+									id: id,
+									name: name,
+									rating: JSON.parse(localStorage.getItem(id)).ratingScore,
+									ratingCount : JSON.parse(localStorage.getItem(id)).ratingCount
+								}
+								savedBeers.push(saveBeer);
+
 								rating = JSON.parse(localStorage.getItem(id)).ratingScore;
-								// console.log(localStorage.getItem(id).rating);
 							} 
 							var beer = {
 								output: '<li class="pivo" data-rating="' + rating + '">',
@@ -74,6 +81,29 @@
 				var target = $(this).parent('.links').parent('.pivo').find('.response');
 				searchRating(beerUrl, beerId, target);
 				// rating(beer, target);
+			})
+
+
+			var saveData = (function () {
+				var a = document.createElement("a");
+				document.body.appendChild(a);
+				a.style = "display: none";
+				return function (data, fileName) {
+				    var json = JSON.stringify(data),
+				        blob = new Blob([json], {type: "octet/stream"}),
+				        url = window.URL.createObjectURL(blob);
+				    a.href = url;
+				    a.download = fileName;
+				    a.click();
+				    window.URL.revokeObjectURL(url);
+				};
+			}());
+
+			fileName = "Berrlist.json";
+
+			$('#get-list').on('click',function(){
+				console.log(savedBeers);
+				saveData(savedBeers, fileName);
 			})
 
 			function rating(dataurl){
@@ -228,5 +258,6 @@
 	<ul id="main">
 		
 	</ul>
+	<button id="get-list">Get the list</button>
 </body>
 </html>
