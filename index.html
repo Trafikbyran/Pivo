@@ -4,13 +4,18 @@
 	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script>
 		$( document ).ready(function() {
-			var savedBeers = [{}];
+			var savedBeers = [{
+				date: 0
+			},];
+
 			$.ajax({
 			    url: "xml.xml",
 			    type: "GET",
 			    dataType: "xml",
 			    success: function (xml) {
-			    	// console.log(xml);
+			    	console.log(xml);
+			    	savedBeers[0].date = $(xml).find('skapad-tid').text();
+			    	$('.date').html(savedBeers[0].date);
 			    	var beerlist = [{}];
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
@@ -255,9 +260,10 @@
 	<title>Pivo</title>
 </head>
 <body>
+	<button id="get-list">Save Data</button>
+	<span class="date"></span>
 	<ul id="main">
 		
 	</ul>
-	<button id="get-list">Get the list</button>
 </body>
 </html>
