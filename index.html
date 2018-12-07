@@ -38,8 +38,11 @@
 							}
 							beer.output += '<span> | ' + $(this).find('Alkoholhalt').text() + '</span></strong>';
 							beer.output += '<span> av: ' + brewery + '</span></br>';
-							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + name + ' ' + subline;
-							beer.output += '<button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
+							var searchArgs = name + ' ' + subline;
+							searchArgs = searchArgs.replace('&','')
+							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
+							beer.output += '<div class="links"><button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
+							beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + name + ' ' + subline  +  '" target="_blank">Röda näsan</a></div>';
 							if(localStorage.getItem(id)){
 								beer.output += '<div class="response"><div class="rating">' + JSON.parse(localStorage.getItem(id)).ratingScore + '<span>på ' + JSON.parse(localStorage.getItem(id)).ratingCount + ' ratings</span></div></div></lI>';
 							} else {
@@ -68,7 +71,7 @@
 				var beerUrl = $(this).attr('data-url');
 				var beerId = $(this).attr('data-id');
 				// console.log(beer);
-				var target = $(this).parent().find('.response');
+				var target = $(this).parent('.links').parent('.pivo').find('.response');
 				searchRating(beerUrl, beerId, target);
 				// rating(beer, target);
 			})
@@ -80,11 +83,12 @@
 
 			function searchRating(dataurl, dataid, target){
 				// console.log(dataurl);
+				
 				$.ajax({
 				    url: dataurl,
 				    type: "GET",
 				    success: function (data) {
-				    	console.log(data);
+				    	// console.log(data);
 				    	if(data.response.beers.count > 0) {
 				    		$.ajax({
 							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
@@ -93,11 +97,11 @@
 							    	// console.log(data.response.beer['rating_score']);
 							    	// console.log(data.response.beer['beer_name']);
 							    	// console.log(data.response.beer.brewery['brewery_name']);
-							    	console.log(data.response.beer);
+							    	// console.log(data.response.beer);
 							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
 						    		var beerRating = { 
 						    			ratingCount: data.response.beer['rating_count'],
-						    			ratingScore: data.response.beer['rating_score']}
+						    			ratingScore: data.response.beer['rating_score']};
 						    		target.append(output);	
 						    		localStorage.setItem(dataid,JSON.stringify(beerRating));
 
@@ -185,9 +189,10 @@
 			font-style: italic;
 			font-size: 0.7em;
 		}
-		.tap {
-			display: block;
-			margin: 10px auto;
+		.tap, a {
+			text-decoration: none;
+			display: inline-block;
+			margin: 10px 3px;
 			color: #ccc;
 			border: 1px solid #ccc;
 			padding: 2px 15px;
