@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script>
 		$( document ).ready(function() {
-			var savedBeers = [{
-				date: 0
-			},];
+			var savedBeers = {
+				date: 0,
+			};
+
+			$.ajax({
+				url: 'beers',
+				type: 'GET',
+				dataType: 'json',
+				success: (data) => {
+					savedBeers.beers = data;
+					console.log(savedBeers);
+				},
+			})
 
 			$.ajax({
 			    url: "xml.xml",
@@ -14,28 +25,30 @@
 			    dataType: "xml",
 			    success: function (xml) {
 			    	console.log(xml);
-			    	savedBeers[0].date = $(xml).find('skapad-tid').text();
-			    	$('.date').html(savedBeers[0].date);
+			    	savedBeers.date = $(xml).find('skapad-tid').text();
+			    	$('.date').html(savedBeers.date);
 			    	var beerlist = [{}];
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
 							var id = $(this).find('Artikelid').text();
+							var storedBeer = savedBeers.beers.find(obj => obj.id == id);
 							var name = $(this).find('Namn').text();
 							var subline = $(this).find('Namn2').text();
 							var brewery = $(this).find('Producent').text();
 							var type = $(this).find('Typ').text();
 							var rating = 1;
-							if (localStorage.getItem(id)) {
-								var saveBeer = {
-									id: id,
-									name: name,
-									rating: JSON.parse(localStorage.getItem(id)).ratingScore,
-									ratingCount : JSON.parse(localStorage.getItem(id)).ratingCount
-								}
-								savedBeers.push(saveBeer);
-
-								rating = JSON.parse(localStorage.getItem(id)).ratingScore;
-							} 
+							// if (localStorage.getItem(id)) {
+							// 	var saveBeer = {
+							// 		id: id,
+							// 		name: name,
+							// 		rating: JSON.parse(localStorage.getItem(id)).ratingScore,
+							// 		ratingCount : JSON.parse(localStorage.getItem(id)).ratingCount
+							// 	}
+							// 	savedBeers.push(saveBeer);
+							if(storedBeer) {
+								rating = storedBeer.rating;
+							}
+							// } 
 							var beer = {
 								output: '<li class="pivo" data-rating="' + rating + '">',
 								rating: rating
@@ -55,8 +68,8 @@
 							var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
 							beer.output += '<div class="links"><button class="tap" data-id="' + id + '" data-url="' + search +'">Rate</button>';
 							beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + name + ' ' + subline  +  '" target="_blank">Röda näsan</a></div>';
-							if(localStorage.getItem(id)){
-								beer.output += '<div class="response"><div class="rating">' + JSON.parse(localStorage.getItem(id)).ratingScore + '<span>på ' + JSON.parse(localStorage.getItem(id)).ratingCount + ' ratings</span></div></div></lI>';
+							if(storedBeer){
+								beer.output += '<div class="response"><div class="rating">' + storedBeer.rating + '<span>på ' + storedBeer.ratingcount + ' ratings</span></div></div></lI>';
 							} else {
 								beer.output += '<div class="response"></div></lI>';
 							}
@@ -137,8 +150,21 @@
 						    		var beerRating = { 
 						    			ratingCount: data.response.beer['rating_count'],
 						    			ratingScore: data.response.beer['rating_score']};
-						    		target.append(output);	
-						    		localStorage.setItem(dataid,JSON.stringify(beerRating));
+						    		target.append(output);
+						    		$.ajax({
+						    			url: 'beers',
+						    			type: 'POST',
+						    			data: {
+						    				id: dataid,
+						    				name: data.response.beer['beer_name'],
+						    				rating: data.response.beer['rating_score'],
+						    				ratingCount: data.response.beer['rating_count'],
+						    			},
+						    			success: (data) => {
+						    				console.log('sucess');
+						    			},
+						    		});
+						    		// localStorage.setItem(dataid,JSON.stringify(beerRating));
 
 							    },
 							    error: function () {
@@ -188,7 +214,7 @@
 			list-style: none;
 			background: #333;
 			min-height: 200px;
-			width: 300px;
+			width: 100%;
 			text-align: center;
 			color: #ccc;
 			margin: 10px;
@@ -206,6 +232,16 @@
 			flex-direction: column;
 			justify-content: flex-start;
 			font-family: 'Helvetica';
+		}
+		@media screen and (min-width: 467px) {
+			.pivo {
+				width: calc(50% - 40px)
+			}
+		}
+		@media screen and (min-width: 767px) {
+			.pivo {
+				width: 300px;
+			}
 		}
 		.pivo strong {
 			display: block;
