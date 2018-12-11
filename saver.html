@@ -18,53 +18,70 @@
 	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<script>
 		$( document ).ready(function() {
-
+			
 			const database = firebase.database();
+			// database.ref('beers/').remove();
 
-			database.ref('beers/').once('value').then(function(snapshot) {
-				var beerlist = [{}];
-				$.each(snapshot.val(), function(key, value){
-					// console.log(value.name);
-					if(!value.rating){
-						value.rating = 1;
-						value.ratingCount = 0;
-					}
-					var beer = {
-						output: '<li class="pivo" data-rating="' + value.rating + '">',
-						rating: value.rating
-					};
+			$.ajax({
+			    url: "xml.xml",
+			    type: "GET",
+			    dataType: "xml",
+			    success: function (xml) {
+			    	// console.log(xml);
+					$(xml).find('artikel').each(function(){
+						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
+							var beer = {
+								id: $(this).find('Artikelid').text(),
+								art: $(this).find('Varnummer').text(),
+								name: $(this).find('Namn').text(),
+								subline: $(this).find('Namn2').text(),
+								brewery: $(this).find('Producent').text(),
+								type: $(this).find('Typ').text(),
+								pris: $(this).find('Prisinklmoms').text(),
+								volym: $(this).find('Volymiml').text(),
+								packing: $(this).find('Forpackning').text(),
+								origin: $(this).find('Ursprunglandnamn').text(),
+								alch: $(this).find('Alkoholhalt').text(),
+							}
 
-					beer.output += '<span class="type">' + value.type + '</span>' ;
-					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i></strong>'; 
-					beer.output += '<span> av: ' + value.brewery + '</span></br>';
-					var searchArgs = value.name +  ' ' + value.subline;
-					searchArgs = searchArgs.replace('/[&-]/g','');
-					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
-					beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
-					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
-					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
-					beerlist.push(beer);
-				})
-				beerlist.sort(function(a , b){
-					return b.rating - a.rating;
-				});
-				$.each(beerlist, function(i, val){
-					$("#main").append(val.output);
-				})
+							
+							// database.ref('beers/' + id).once('value').then(function(snapshot) {
+							// 	console.log(snapshot.val());
+
+							// });
+							database.ref('beers/' + beer.id).update({ 
+									"art": beer.art,
+									"name": beer.name,
+									"subline": beer.subline,
+									"brewery": beer.brewery,
+									"type": beer.type,
+									"pris": beer.pris,
+									"volym": beer.volym,
+									"packing": beer.packing,
+									"origin": beer.origin,
+									"alch": beer.alch,
+							});
+							
+						}
+					});
+				
+					
+			    },
+			    error: function () {
+			    	$("#main").html('failed');
+			    }
 			});
 
 			$('#main').on('click','.tap',function(){
 				var beerUrl = $(this).attr('data-url');
 				var beerId = $(this).attr('data-id');
-				var beerName = $(this).attr('data-name');
-				var beerSubline = $(this).attr('data-sub');
 				// console.log(beer);
 				var target = $(this).parent('.links').parent('.pivo').find('.response');
-				searchRating(beerUrl, beerId, target, beerName, beerSubline);
+				searchRating(beerUrl, beerId, target);
 				// rating(beer, target);
 			})
 
-			function searchRating(dataurl, dataid, target, dataname, datasubline){
+			function searchRating(dataurl, dataid, target){
 				// console.log(dataurl);
 				
 				$.ajax({
@@ -77,19 +94,29 @@
 							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
 							    type: "GET",
 							    success: function (data) {
+							    	// console.log(data.response.beer['rating_score']);
+							    	// console.log(data.response.beer['beer_name']);
+							    	// console.log(data.response.beer.brewery['brewery_name']);
+							    	// console.log(data.response.beer);
 							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
 						    		var beerRating = { 
 						    			ratingCount: data.response.beer['rating_count'],
 						    			ratingScore: data.response.beer['rating_score']};
-						    		target.html(output);
-						    		database.ref('beers/' + dataid).update({
-						    			name: dataname,
-						    			subline: datasubline,
-						    			brewery: data.response.beer.brewery['brewery_name'],
-						    			type: data.response.beer['beer_style'],
-					    				rating: data.response.beer['rating_score'],
-					    				ratingCount: data.response.beer['rating_count'],
+						    		target.append(output);
+						    		$.ajax({
+						    			url: 'beers',
+						    			type: 'POST',
+						    			data: {
+						    				id: dataid,
+						    				name: data.response.beer['beer_name'],
+						    				rating: data.response.beer['rating_score'],
+						    				ratingCount: data.response.beer['rating_count'],
+						    			},
+						    			success: (data) => {
+						    				console.log('sucess');
+						    			},
 						    		});
+						    		// localStorage.setItem(dataid,JSON.stringify(beerRating));
 
 							    },
 							    error: function () {
@@ -223,6 +250,7 @@
 <body>
 	<span class="date"></span>
 	<ul id="main">
+		
 	</ul>
 </body>
 </html>
