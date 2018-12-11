@@ -41,7 +41,7 @@
 						apk = apk / parseInt(value.pris);
 					} 
 					var beer = {
-						output: '<li class="pivo hide" data-type="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
+						output: '<li class="pivo" data-type="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
 						rating: value.rating,
 						apk: apk,
 					};
@@ -61,16 +61,30 @@
 					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
 					beerlist.push(beer);
 				})
-				beerlist.sort(function(a , b){
-					return b.rating - a.rating;
-				});
+				sortNprint(beerlist);
+				$('.pivo').toggleClass('hide');
+				
 				$.each(styles, function(i, val){
 					$("#filter").append('<span class="filter-type hide" data-type="' + convertToSlug(val) + '">' + val + '</span>');
 				})
-				$.each(beerlist, function(i, val){
+			});
+
+
+			function sortNprint(list, sortType){
+				$('#main').html('');
+				if(sortType == 'apk'){
+					list.sort(function(a , b){
+						return b.apk - a.apk;
+					});
+				} else {
+					list.sort(function(a , b){
+						return b.rating - a.rating;
+					});
+				}
+				$.each(list, function(i, val){
 					$("#main").append(val.output);
 				})
-			});
+			}
 
 			function convertToSlug(Text)
 			{
@@ -80,6 +94,12 @@
 			        .replace(/ +/g,'-')
 			        ;
 			}
+
+			$('.sort').click(function(){
+				$('.sort').removeClass('active')
+				$(this).addClass('active');
+				sortNprint(beerlist, $(event.target).attr('sort-type'));
+			})
 
 			$('#filter').on('click','.filter-type', function(){
 				if($(event.target).hasClass('show-all')){
@@ -268,7 +288,7 @@
 			color: #333;
 			border-color:  #333;
 		}
-		.filter-type {
+		.filter-type{
 			display: inline-block;
 			border: 2px solid #333;
 			background: #333;
@@ -281,6 +301,19 @@
 			background: transparent;
 			color: #333;
 		}
+		.sort {
+			display: inline-block;
+			border: 2px solid #333;
+			background: transparent;
+			color: #333;
+			padding: 3px 12px;
+			margin: 3px;
+			cursor: pointer;
+		}
+		.sort.active {
+			background: #333;
+			color: #fff;
+		}
 		
 	</style>
 	<meta charset="UTF-8">
@@ -289,6 +322,8 @@
 <body>
 	<span class="date"></span>
 	<div id="filter">
+		<span class="sort" sort-type="apk">Sortera efter APK</span>
+		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
 		<span class="show-all filter-type hide">Alla</span>
 	</div>
 	<ul id="main">
