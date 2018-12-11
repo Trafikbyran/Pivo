@@ -196,6 +196,12 @@
 			flex-wrap: wrap;
 			-ms-align-items: center;
 			align-items: center;
+			justify-content: center;
+		}
+		#filter, #sort {
+			text-align: center;
+			max-width: 80%;
+			margin: 20px auto;
 		}
 		.pivo {
 			list-style: none;
@@ -321,9 +327,11 @@
 </head>
 <body>
 	<span class="date"></span>
-	<div id="filter">
+	<div id="sort">
 		<span class="sort" sort-type="apk">Sortera efter APK</span>
 		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
+	</div>
+	<div id="filter">
 		<span class="show-all filter-type hide">Alla</span>
 	</div>
 	<ul id="main">
