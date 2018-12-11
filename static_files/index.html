@@ -33,7 +33,7 @@
 					beer.output += '<span class="type">' + value.type + '</span>' ;
 					beer.output += '<strong>' + value.name + '</strong>'; 
 					beer.output += '<span> av: ' + value.brewery + '</span></br>';
-					var searchArgs = value.name;
+					var searchArgs = value.name + ' ' + value.brewery;
 					searchArgs = searchArgs.replace('&','')
 					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
 					beer.output += '<div class="links"><button class="tap" data-id="' + key + '" data-url="' + search +'">Rate</button>';
@@ -58,34 +58,6 @@
 				// rating(beer, target);
 			})
 
-
-			var saveData = (function () {
-				var a = document.createElement("a");
-				document.body.appendChild(a);
-				a.style = "display: none";
-				return function (data, fileName) {
-				    var json = JSON.stringify(data),
-				        blob = new Blob([json], {type: "octet/stream"}),
-				        url = window.URL.createObjectURL(blob);
-				    a.href = url;
-				    a.download = fileName;
-				    a.click();
-				    window.URL.revokeObjectURL(url);
-				};
-			}());
-
-			fileName = "Berrlist.json";
-
-			$('#get-list').on('click',function(){
-				console.log(savedBeers);
-				saveData(savedBeers, fileName);
-			})
-
-			function rating(dataurl){
-				var output = '<span>Noa av: Omnipollo<br></span><div class="rating">4.234</div>';
-				return output;
-			}
-
 			function searchRating(dataurl, dataid, target){
 				// console.log(dataurl);
 				
@@ -103,7 +75,7 @@
 						    		var beerRating = { 
 						    			ratingCount: data.response.beer['rating_count'],
 						    			ratingScore: data.response.beer['rating_score']};
-						    		target.append(output);
+						    		target.html(output);
 						    		database.ref('beers/' + dataid).set({
 						    			name: data.response.beer['beer_name'],
 						    			brewery: data.response.beer.brewery['brewery_name'],
@@ -242,11 +214,8 @@
 	<title>Pivo</title>
 </head>
 <body>
-	<button id="get-list">Save Data</button>
 	<span class="date"></span>
 	<ul id="main">
-		
 	</ul>
-
 </body>
 </html>
