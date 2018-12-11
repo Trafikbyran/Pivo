@@ -31,13 +31,13 @@
 						rating: value.rating
 					};
 					beer.output += '<span class="type">' + value.type + '</span>' ;
-					beer.output += '<strong>' + value.name + '</strong>'; 
+					beer.output += '<strong>' + value.name + '<i>' +  value.subline + '</i></strong>'; 
 					beer.output += '<span> av: ' + value.brewery + '</span></br>';
-					var searchArgs = value.name + ' ' + value.brewery;
+					var searchArgs = value.name +  ' ' + value.subline + ' ' + value.brewery;
 					searchArgs = searchArgs.replace('&','')
 					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
 					beer.output += '<div class="links"><button class="tap" data-id="' + key + '" data-url="' + search +'">Rate</button>';
-					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name + '" target="_blank">Röda näsan</a></div>';
+					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.subline + '" target="_blank">Röda näsan</a></div>';
 					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
 					beerlist.push(beer);
 				})
@@ -78,6 +78,7 @@
 						    		target.html(output);
 						    		database.ref('beers/' + dataid).set({
 						    			name: data.response.beer['beer_name'],
+						    			subline: '',
 						    			brewery: data.response.beer.brewery['brewery_name'],
 						    			type: data.response.beer['beer_style'],
 					    				rating: data.response.beer['rating_score'],
