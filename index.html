@@ -35,10 +35,20 @@
 					};
 
 					beer.output += '<span class="type">' + value.type + '</span>' ;
-					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i></strong>'; 
-					beer.output += '<span> av: ' + value.brewery + '</span></br>';
+					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i>'; 
+					beer.output += '<span> | ' + value.alch + '</span></strong>';
+					beer.output += '<span> av: ' + value.brewery + ' - ' + value.origin + '</span>';
+					var apk = 0;
+					if(value.alch){
+						apk = value.alch.replace('%','');
+						apk = apk / 100;
+						apk = apk * parseInt(value.volym);
+						apk = apk / parseInt(value.pris);
+					} 
+					beer.output += '<span>' + value.pris + ':- <i>(APK: ' + parseFloat(apk).toFixed(2) + ')</i></span>';
+					
 					var searchArgs = value.name +  ' ' + value.subline;
-					searchArgs = searchArgs.replace('/[&-]/g','');
+					searchArgs = searchArgs.replace('&','');
 					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
 					beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
 					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
@@ -100,15 +110,15 @@
 				    		var beerRating = { 
 				    			ratingCount: 0,
 				    			ratingScore: 0}
-				    		var output = '<div class="rating">Ölen hittades inte..</div>';
+				    		var output = '<div class="rating">Ölen hittades inte.. <a href="https://untappd.com/search" target="_blank">Sök säljv</a></div>';
 				    		localStorage.setItem(dataid,JSON.stringify(beerRating));
-				    		target.append(output);
+				    		target.html(output);
 				    	}
 				    },
 				    error: function (data) {
 				    	console.log(data);
 				    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
-				    	target.append(output);
+				    	target.html(output);
 				    	return false
 				    }
 				});
@@ -214,6 +224,10 @@
 			display: block;
 			font-size: 0.6em;
 			text-transform: uppercase;
+		}
+		.response a {
+			color: #333;
+			border-color:  #333;
 		}
 		
 	</style>
