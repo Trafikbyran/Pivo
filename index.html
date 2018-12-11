@@ -30,19 +30,14 @@
 						output: '<li class="pivo" data-rating="' + value.rating + '">',
 						rating: value.rating
 					};
-					if(!value.subline){
-						value.subline = '';
-					} else {
-						value.subline = ' - ' + value.subline;
-					}
 					beer.output += '<span class="type">' + value.type + '</span>' ;
-					beer.output += '<strong>' + value.name + '<i>' +  value.subline + '</i></strong>'; 
+					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i></strong>'; 
 					beer.output += '<span> av: ' + value.brewery + '</span></br>';
 					var searchArgs = value.name +  ' ' + value.subline + ' ' + value.brewery;
 					searchArgs = searchArgs.replace('/[&-]/g','');
 					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
-					beer.output += '<div class="links"><button class="tap" data-id="' + key + '" data-url="' + search +'">Rate</button>';
-					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.subline.replace('-','') + '" target="_blank">Röda näsan</a></div>';
+					beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
+					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.subline + '" target="_blank">Röda näsan</a></div>';
 					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
 					beerlist.push(beer);
 				})
@@ -57,13 +52,15 @@
 			$('#main').on('click','.tap',function(){
 				var beerUrl = $(this).attr('data-url');
 				var beerId = $(this).attr('data-id');
+				var beerName = $(this).attr('data-name');
+				var beerSubline = $(this).attr('data-sub');
 				// console.log(beer);
 				var target = $(this).parent('.links').parent('.pivo').find('.response');
-				searchRating(beerUrl, beerId, target);
+				searchRating(beerUrl, beerId, target, beerName, beerSubline);
 				// rating(beer, target);
 			})
 
-			function searchRating(dataurl, dataid, target){
+			function searchRating(dataurl, dataid, target, dataname, datasubline){
 				// console.log(dataurl);
 				
 				$.ajax({
@@ -82,8 +79,8 @@
 						    			ratingScore: data.response.beer['rating_score']};
 						    		target.html(output);
 						    		database.ref('beers/' + dataid).set({
-						    			name: data.response.beer['beer_name'],
-						    			subline: '',
+						    			name: dataname,
+						    			subline: datasubline,
 						    			brewery: data.response.beer.brewery['brewery_name'],
 						    			type: data.response.beer['beer_style'],
 					    				rating: data.response.beer['rating_score'],
