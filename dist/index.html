@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
+	<script>
+	  // Initialize Firebase
+	  var config = {
+	    apiKey: "AIzaSyCRBX97A0SZryCf0F9vpNNRAau3NYPPxls",
+	    authDomain: "pivo-225207.firebaseapp.com",
+	    databaseURL: "https://pivo-225207.firebaseio.com",
+	    projectId: "pivo-225207",
+	    storageBucket: "",
+	    messagingSenderId: "110860684342"
+	  };
+	  firebase.initializeApp(config);
+	</script>
+	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script>
+		$( document ).ready(function() {
+
+			const database = firebase.database();
+			var styles = [];
+			var beerlist = [{}];
+
+			database.ref('beers/').once('value').then(function(snapshot) {
+				$.each(snapshot.val(), function(key, value){
+					// console.log(value.name);
+					if(!value.rating){
+						value.rating = 1;
+						value.ratingCount = 0;
+					}
+					if ($.inArray(value.type, styles) == -1){
+						styles.push(value.type);
+					}
+					var apk = 0;
+					if(value.alch){
+						apk = value.alch.replace('%','');
+						apk = apk / 100;
+						apk = apk * parseInt(value.volym);
+						apk = apk / parseInt(value.pris);
+					} 
+					var beer = {
+						output: '<li class="pivo" data-type="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
+						rating: value.rating,
+						apk: apk,
+					};
+
+					beer.output += '<span class="type">' + value.type + '</span>' ;
+					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i>'; 
+					beer.output += '<span> | ' + value.alch + '</span></strong>';
+					beer.output += '<span> av: ' + value.brewery + ' - ' + value.origin + '</span>';
+					
+					beer.output += '<span>' + value.pris + ':- <i>(APK: ' + parseFloat(apk).toFixed(2) + ')</i></span>';
+					
+					var searchArgs = value.name +  ' ' + value.subline;
+					searchArgs = searchArgs.replace('&','');
+					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
+					beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
+					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
+					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
+					beerlist.push(beer);
+				})
+				sortNprint(beerlist);
+				$('.pivo').toggleClass('hide');
+				
+				$.each(styles, function(i, val){
+					$("#filter").append('<span class="filter-type hide" data-type="' + convertToSlug(val) + '">' + val + '</span>');
+				})
+			});
+
+
+			function sortNprint(list, sortType){
+				$('#main').html('');
+				if(sortType == 'apk'){
+					list.sort(function(a , b){
+						return b.apk - a.apk;
+					});
+				} else {
+					list.sort(function(a , b){
+						return b.rating - a.rating;
+					});
+				}
+				$.each(list, function(i, val){
+					$("#main").append(val.output);
+				})
+			}
+
+			function convertToSlug(Text)
+			{
+			    return Text
+			        .toLowerCase()
+			        .replace(/[^\w ]+/g,'')
+			        .replace(/ +/g,'-')
+			        ;
+			}
+
+			$('.sort').click(function(){
+				$('.sort').removeClass('active')
+				$(this).addClass('active');
+				sortNprint(beerlist, $(event.target).attr('sort-type'));
+			})
+
+			$('#filter').on('click','.filter-type', function(){
+				if($(event.target).hasClass('show-all')){
+					$(event.target).toggleClass('hide');
+					$('.pivo').toggleClass('hide');
+				} else {
+					var target = $(event.target).attr('data-type');
+					console.log(target);
+					$('.pivo[data-type="' + target + '"]').toggleClass('hide');
+					$(event.target).toggleClass('hide');
+				}
+			})
+
+			$('#main').on('click','.tap',function(){
+				var beerUrl = $(this).attr('data-url');
+				var beerId = $(this).attr('data-id');
+				var beerName = $(this).attr('data-name');
+				var beerSubline = $(this).attr('data-sub');
+				// console.log(beer);
+				var target = $(this).parent('.links').parent('.pivo').find('.response');
+				searchRating(beerUrl, beerId, target, beerName, beerSubline);
+				// rating(beer, target);
+			})
+
+
+
+			function searchRating(dataurl, dataid, target, dataname, datasubline){
+				// console.log(dataurl);
+				$.ajax({
+				    url: dataurl,
+				    type: "GET",
+				    success: function (data) {
+				    	// console.log(data);
+				    	if(data.response.beers.count > 0) {
+				    		$.ajax({
+							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
+							    type: "GET",
+							    success: function (data) {
+							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
+						    		var beerRating = { 
+						    			ratingCount: data.response.beer['rating_count'],
+						    			ratingScore: data.response.beer['rating_score']};
+						    		target.html(output);
+						    		database.ref('beers/' + dataid).update({
+						    			name: dataname,
+						    			subline: datasubline,
+						    			brewery: data.response.beer.brewery['brewery_name'],
+						    			type: data.response.beer['beer_style'],
+					    				rating: data.response.beer['rating_score'],
+					    				ratingCount: data.response.beer['rating_count'],
+						    		});
+
+							    },
+							    error: function () {
+							    	return false
+							    }
+							});
+				    	} else {
+				    		var beerRating = { 
+				    			ratingCount: 0,
+				    			ratingScore: 0}
+				    		var output = '<div class="rating">Ölen hittades inte.. <a href="https://untappd.com/search" target="_blank">Sök säljv</a></div>';
+				    		localStorage.setItem(dataid,JSON.stringify(beerRating));
+				    		target.html(output);
+				    	}
+				    },
+				    error: function (data) {
+				    	console.log(data);
+				    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
+				    	target.html(output);
+				    	return false
+				    }
+				});
+			}
+		});
+	</script>
+	<style>
+		body {
+			margin: 0;
+			font-family: 'Helvetica', sans-serif;
+		}
+		#main {
+			margin: 0;
+			padding: 0;
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+			-webkit-flex-wrap: wrap;
+			-moz-flex-wrap: wrap;
+			-ms-flex-wrap: wrap;
+			-o-flex-wrap: wrap;
+			flex-wrap: wrap;
+			-ms-align-items: center;
+			align-items: center;
+			justify-content: center;
+		}
+		#filter, #sort {
+			text-align: center;
+			max-width: 80%;
+			margin: 20px auto;
+		}
+		.pivo {
+			list-style: none;
+			background: #333;
+			min-height: 200px;
+			width: 100%;
+			overflow: hidden;
+			text-align: center;
+			color: #ccc;
+			margin: 10px;
+			padding: 30px 10px 10px 10px;
+			position: relative;
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+			-webkit-flex-direction: column;
+			-moz-flex-direction: column;
+			-ms-flex-direction: column;
+			-o-flex-direction: column;
+			flex-direction: column;
+			justify-content: flex-start;
+			font-family: 'Helvetica';
+		}
+		.pivo.hide {
+			width: 0;
+			height: 0;
+			padding: 0;
+			margin: 0;
+		}
+		@media screen and (min-width: 467px) {
+			.pivo {
+				width: calc(50% - 40px)
+			}
+		}
+		@media screen and (min-width: 767px) {
+			.pivo {
+				width: 300px;
+			}
+		}
+		.pivo strong {
+			display: block;
+			font-size: 0.9em;
+			font-weight: 300;
+		}
+		.pivo strong i {
+			/*font-weight: 400;*/
+		}
+		.pivo span {
+			font-size: 0.7em;
+			/*text-transform: uppercase;*/
+			font-weight: 400;
+		}
+		span.type {
+			font-style: italic;
+			font-size: 0.7em;
+		}
+		.tap, a {
+			text-decoration: none;
+			display: inline-block;
+			margin: 10px 3px;
+			color: #ccc;
+			border: 1px solid #ccc;
+			padding: 2px 15px;
+			font-size: 0.8em;
+			background: transparent;
+			cursor: pointer;
+		}
+		.tap:focus, .tap,hover {
+			outline: none;
+		}
+		.response {
+			width: 100%;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+		} 
+		.response .rating {
+			background: gold;
+			padding: 20px 10px;
+			color: #333;
+		}
+		.response .rating span{
+			display: block;
+			font-size: 0.6em;
+			text-transform: uppercase;
+		}
+		.response a {
+			color: #333;
+			border-color:  #333;
+		}
+		.filter-type{
+			display: inline-block;
+			border: 2px solid #333;
+			background: #333;
+			color: #fff;
+			padding: 3px 12px;
+			margin: 3px;
+			cursor: pointer;
+		}
+		.filter-type.hide {
+			background: transparent;
+			color: #333;
+		}
+		.sort {
+			display: inline-block;
+			border: 2px solid #333;
+			background: transparent;
+			color: #333;
+			padding: 3px 12px;
+			margin: 3px;
+			cursor: pointer;
+		}
+		.sort.active {
+			background: #333;
+			color: #fff;
+		}
+		
+	</style>
+	<meta charset="UTF-8">
+	<title>Pivo</title>
+</head>
+<body>
+	<span class="date"></span>
+	<div id="sort">
+		<span class="sort" sort-type="apk">Sortera efter APK</span>
+		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
+	</div>
+	<div id="filter">
+		<span class="show-all filter-type hide">Alla</span>
+	</div>
+	<ul id="main">
+	</ul>
+</body>
+</html>
