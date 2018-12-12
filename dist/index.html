@@ -21,7 +21,9 @@
 
 			const database = firebase.database();
 			var styles = [];
+			var breweries = [];
 			var beerlist = [{}];
+			var selection = [];
 
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
@@ -33,6 +35,9 @@
 					if ($.inArray(value.type, styles) == -1){
 						styles.push(value.type);
 					}
+					if ($.inArray(value.brewery, breweries) == -1){
+						breweries.push(value.brewery);
+					}
 					var apk = 0;
 					if(value.alch){
 						apk = value.alch.replace('%','');
@@ -41,7 +46,7 @@
 						apk = apk / parseInt(value.pris);
 					} 
 					var beer = {
-						output: '<li class="pivo" data-type="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
+						output: '<li class="pivo" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
 						rating: value.rating,
 						apk: apk,
 					};
@@ -62,15 +67,21 @@
 					beerlist.push(beer);
 				})
 				sortNprint(beerlist);
-				$('.pivo').toggleClass('hide');
-				
+				// $('.pivo').toggleClass('hide');
+
 				$.each(styles, function(i, val){
-					$("#filter").append('<span class="filter-type hide" data-type="' + convertToSlug(val) + '">' + val + '</span>');
+					selection.push(convertToSlug(val));
+					$(".styles.filter").append('<span class="filter-type" data-style="' + convertToSlug(val) + '">' + val + '</span>');
 				})
+				// $.each(breweries, function(i, val){
+				// 	selection.push(convertToSlug(val));
+				// 	$(".breweries.filter").append('<span class="filter-type" data-brewery="' + convertToSlug(val) + '">' + val + '</span>');
+				// })
 			});
 
 
 			function sortNprint(list, sortType){
+				$('.filter-type').addClass('hide');
 				$('#main').html('');
 				if(sortType == 'apk'){
 					list.sort(function(a , b){
@@ -84,6 +95,8 @@
 				$.each(list, function(i, val){
 					$("#main").append(val.output);
 				})
+				$('.filter-type.show-all').removeClass('hide');
+				// $('.pivo').addClass('hide');
 			}
 
 			function convertToSlug(Text)
@@ -101,17 +114,80 @@
 				sortNprint(beerlist, $(event.target).attr('sort-type'));
 			})
 
-			$('#filter').on('click','.filter-type', function(){
+			$('.filter.styles').on('click','.filter-type', function(){
 				if($(event.target).hasClass('show-all')){
-					$(event.target).toggleClass('hide');
-					$('.pivo').toggleClass('hide');
+					selection = [];
+					if($(event.target).hasClass('hide')){
+						$.each(styles, function(i, val){
+							selection.push(convertToSlug(val));
+						})
+						$('.filter-type, .pivo').removeClass('hide');
+					} else {
+						$('.filter-type,  .pivo').addClass('hide');
+					}
+					
 				} else {
-					var target = $(event.target).attr('data-type');
-					console.log(target);
-					$('.pivo[data-type="' + target + '"]').toggleClass('hide');
-					$(event.target).toggleClass('hide');
+					var style = $(event.target).attr('data-style');
+					if ($.inArray(style, selection) == -1){
+						selection.push(style);
+					} else {
+						selection.splice( $.inArray(style, selection), 1 );
+					}
+					$('.filter-type, .pivo').addClass('hide');
+					$.each(selection, function(i, val){
+						$('[data-style="' + val + '"').removeClass('hide');
+					})
 				}
+				console.log(selection);
 			})
+
+			// $('.filter.styles').on('click','.filter-type', function(){
+			// 	$('.breweries .filter-type').addClass('hide');
+			// 	if($(event.target).hasClass('show-all')){
+			// 		$('.styles .show-all').toggleClass('hide');
+			// 		if($('.styles .show-all').hasClass('hide')){
+			// 			$('.pivo').addClass('hide');
+			// 			$('.filter-type').addClass('hide');
+			// 		}else {
+			// 			$('.filter-type').addClass('hide');
+			// 			$('.styles .show-all').removeClass('hide');
+			// 			$('.pivo').removeClass('hide');
+			// 		}
+			// 	} else {
+			// 		if(!$('.styles .show-all').hasClass('hide')){
+			// 			$('.styles .show-all').addClass('hide');
+			// 			$('.pivo').addClass('hide');
+			// 		}
+			// 		var target = $(event.target).attr('data-style');
+			// 		console.log(target);
+			// 		$('.pivo[data-style="' + target + '"]').toggleClass('hide');
+			// 		$(event.target).toggleClass('hide');
+			// 	}
+			// })
+
+			// $('.filter.breweries').on('click','.filter-type', function(){
+			// 	$('.styles .filter-type').addClass('hide');
+			// 	if($(event.target).hasClass('show-all')){
+			// 		$('.breweries .show-all').toggleClass('hide');
+			// 		if($('.breweries .show-all').hasClass('hide')){
+			// 			$('.pivo').addClass('hide');
+			// 			$('.filter-type').addClass('hide');
+			// 		}else {
+			// 			$('.filter-type').addClass('hide');
+			// 			$('.breweries .show-all').removeClass('hide');
+			// 			$('.pivo').removeClass('hide');
+			// 		}
+			// 	} else {
+			// 		if(!$('.breweries .show-all').hasClass('hide')){
+			// 			$('.breweries .show-all').addClass('hide');
+			// 			$('.pivo').addClass('hide');
+			// 		}
+			// 		var target = $(event.target).attr('data-brewery');
+			// 		console.log(target);
+			// 		$('.pivo[data-brewery="' + target + '"]').toggleClass('hide');
+			// 		$(event.target).toggleClass('hide');
+			// 	}
+			// })
 
 			$('#main').on('click','.tap',function(){
 				var beerUrl = $(this).attr('data-url');
@@ -180,6 +256,7 @@
 		body {
 			margin: 0;
 			font-family: 'Helvetica', sans-serif;
+			overflow-y: scroll;
 		}
 		#main {
 			margin: 0;
@@ -331,9 +408,12 @@
 		<span class="sort" sort-type="apk">Sortera efter APK</span>
 		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
 	</div>
-	<div id="filter">
-		<span class="show-all filter-type hide">Alla</span>
+	<div class="filter styles">
+		<span class="show-all filter-type">Alla</span>
 	</div>
+<!-- 	<div class="filter breweries">
+		<span class="show-all filter-type">Alla</span>
+	</div> -->
 	<ul id="main">
 	</ul>
 </body>
