@@ -24,6 +24,8 @@
 			var breweries = [];
 			var beerlist = [{}];
 			var selection = [];
+			var selectorList = [];
+			var fullSelLength;
 
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
@@ -66,22 +68,36 @@
 					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
 					beerlist.push(beer);
 				})
-				sortNprint(beerlist);
 				// $('.pivo').toggleClass('hide');
 
 				$.each(styles, function(i, val){
 					selection.push(convertToSlug(val));
-					$(".styles.filter").append('<span class="filter-type" data-style="' + convertToSlug(val) + '">' + val + '</span>');
+					var selector = {
+						name: val,
+						output: '<span class="filter-type" data-style="' + convertToSlug(val) + '">' + val + '</span>',
+						
+					}
+					selectorList.push(selector);
 				})
+				selectorList.sort(SortByName);
+				$.each(selectorList, function(i, val){
+					$(".filter.styles").append(val.output);
+				})
+				fullSelLength = selection.length;
+
 				// $.each(breweries, function(i, val){
 				// 	selection.push(convertToSlug(val));
 				// 	$(".breweries.filter").append('<span class="filter-type" data-brewery="' + convertToSlug(val) + '">' + val + '</span>');
 				// })
+				sortNprint(beerlist);
 			});
 
-
+			function SortByName(a, b){
+			  var aName = a.name.toLowerCase();
+			  var bName = b.name.toLowerCase(); 
+			  return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+			}
 			function sortNprint(list, sortType){
-				$('.filter-type').addClass('hide');
 				$('#main').html('');
 				if(sortType == 'apk'){
 					list.sort(function(a , b){
@@ -95,7 +111,14 @@
 				$.each(list, function(i, val){
 					$("#main").append(val.output);
 				})
-				$('.filter-type.show-all').removeClass('hide');
+				$('.filter-type, .pivo').addClass('hide');
+				$.each(selection, function(i, val){
+					$('[data-style="' + val + '"').removeClass('hide');
+				})
+				if(selection.length == fullSelLength){
+					$('.show-all').removeClass('hide');
+				}
+				console.log(selection);
 				// $('.pivo').addClass('hide');
 			}
 
@@ -397,6 +420,18 @@
 			background: #333;
 			color: #fff;
 		}
+		.filters {
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+		}
+		.filter {
+			/*width: 50%;*/
+			height: 350px;
+			overflow-y: scroll;
+		}
 		
 	</style>
 	<meta charset="UTF-8">
@@ -408,12 +443,14 @@
 		<span class="sort" sort-type="apk">Sortera efter APK</span>
 		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
 	</div>
-	<div class="filter styles">
-		<span class="show-all filter-type">Alla</span>
-	</div>
-<!-- 	<div class="filter breweries">
-		<span class="show-all filter-type">Alla</span>
-	</div> -->
+	<!-- <div class="filters"> -->
+		<div class="filter styles">
+			<span class="show-all-styles show-all filter-type">Alla</span>
+		</div>
+		<!-- <div class="filter breweries">
+			<span class="show-all-breweries show-all filter-type">Alla</span>
+		</div> -->
+	<!-- </div> -->
 	<ul id="main">
 	</ul>
 </body>
