@@ -15,17 +15,18 @@
 	  };
 	  firebase.initializeApp(config);
 	</script>
-	<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 	<script>
 		$( document ).ready(function() {
-
+			$('.ui-loader').remove();
 			const database = firebase.database();
 			var styles = [];
 			var breweries = [];
 			var beerlist = [{}];
 			var selection = [];
 			var selectorList = [];
-			var fullSelLength;
+			var fullSelLength = 0;
 
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
@@ -84,12 +85,13 @@
 					$(".filter.styles").append(val.output);
 				})
 				fullSelLength = selection.length;
-
 				// $.each(breweries, function(i, val){
 				// 	selection.push(convertToSlug(val));
 				// 	$(".breweries.filter").append('<span class="filter-type" data-brewery="' + convertToSlug(val) + '">' + val + '</span>');
 				// })
+
 				sortNprint(beerlist);
+
 			});
 
 			function SortByName(a, b){
@@ -113,12 +115,11 @@
 				})
 				$('.filter-type, .pivo').addClass('hide');
 				$.each(selection, function(i, val){
-					$('[data-style="' + val + '"').removeClass('hide');
+					$('[data-style="' + val + '"]').removeClass('hide');
 				})
 				if(selection.length == fullSelLength){
 					$('.show-all').removeClass('hide');
 				}
-				console.log(selection);
 				// $('.pivo').addClass('hide');
 			}
 
@@ -131,13 +132,13 @@
 			        ;
 			}
 
-			$('.sort').click(function(){
+			$('.sort').click(function(e){
 				$('.sort').removeClass('active')
 				$(this).addClass('active');
 				sortNprint(beerlist, $(event.target).attr('sort-type'));
 			})
 
-			$('.filter.styles').on('click','.filter-type', function(){
+			$('.filter.styles').on('click','.filter-type', function(e){
 				if($(event.target).hasClass('show-all')){
 					selection = [];
 					if($(event.target).hasClass('hide')){
@@ -158,59 +159,14 @@
 					}
 					$('.filter-type, .pivo').addClass('hide');
 					$.each(selection, function(i, val){
-						$('[data-style="' + val + '"').removeClass('hide');
+						$('[data-style="' + val + '"]').removeClass('hide');
 					})
 				}
-				console.log(selection);
+				if(selection.length == fullSelLength){
+					$('.show-all').removeClass('hide');
+				}
+				// console.log(selection);
 			})
-
-			// $('.filter.styles').on('click','.filter-type', function(){
-			// 	$('.breweries .filter-type').addClass('hide');
-			// 	if($(event.target).hasClass('show-all')){
-			// 		$('.styles .show-all').toggleClass('hide');
-			// 		if($('.styles .show-all').hasClass('hide')){
-			// 			$('.pivo').addClass('hide');
-			// 			$('.filter-type').addClass('hide');
-			// 		}else {
-			// 			$('.filter-type').addClass('hide');
-			// 			$('.styles .show-all').removeClass('hide');
-			// 			$('.pivo').removeClass('hide');
-			// 		}
-			// 	} else {
-			// 		if(!$('.styles .show-all').hasClass('hide')){
-			// 			$('.styles .show-all').addClass('hide');
-			// 			$('.pivo').addClass('hide');
-			// 		}
-			// 		var target = $(event.target).attr('data-style');
-			// 		console.log(target);
-			// 		$('.pivo[data-style="' + target + '"]').toggleClass('hide');
-			// 		$(event.target).toggleClass('hide');
-			// 	}
-			// })
-
-			// $('.filter.breweries').on('click','.filter-type', function(){
-			// 	$('.styles .filter-type').addClass('hide');
-			// 	if($(event.target).hasClass('show-all')){
-			// 		$('.breweries .show-all').toggleClass('hide');
-			// 		if($('.breweries .show-all').hasClass('hide')){
-			// 			$('.pivo').addClass('hide');
-			// 			$('.filter-type').addClass('hide');
-			// 		}else {
-			// 			$('.filter-type').addClass('hide');
-			// 			$('.breweries .show-all').removeClass('hide');
-			// 			$('.pivo').removeClass('hide');
-			// 		}
-			// 	} else {
-			// 		if(!$('.breweries .show-all').hasClass('hide')){
-			// 			$('.breweries .show-all').addClass('hide');
-			// 			$('.pivo').addClass('hide');
-			// 		}
-			// 		var target = $(event.target).attr('data-brewery');
-			// 		console.log(target);
-			// 		$('.pivo[data-brewery="' + target + '"]').toggleClass('hide');
-			// 		$(event.target).toggleClass('hide');
-			// 	}
-			// })
 
 			$('#main').on('click','.tap',function(){
 				var beerUrl = $(this).attr('data-url');
@@ -222,6 +178,15 @@
 				searchRating(beerUrl, beerId, target, beerName, beerSubline);
 				// rating(beer, target);
 			})
+
+			$( "#main" ).on( "swiperight", function(){
+				$('.filter').removeClass('hidden');
+				$('body, html').addClass('stil');
+			});
+			$( ".filter" ).on( "swipeleft", function(){
+				$('.filter').addClass('hidden');
+				$('body, hmtl').removeClass('stil');
+			});
 
 
 
@@ -276,12 +241,21 @@
 		});
 	</script>
 	<style>
+		*:focus {
+			outline: 0;
+		}
 		body {
 			margin: 0;
 			font-family: 'Helvetica', sans-serif;
 			overflow-y: scroll;
+			overflow-x: hidden;
+		}
+		body.stil, html.stil{
+			overflow: hidden;
+			height: 100vh;
 		}
 		#main {
+			min-height: 90vh;
 			margin: 0;
 			padding: 0;
 			display: -webkit-flex;
@@ -330,6 +304,7 @@
 		.pivo.hide {
 			width: 0;
 			height: 0;
+			min-height: 0;
 			padding: 0;
 			margin: 0;
 		}
@@ -399,7 +374,8 @@
 			border: 2px solid #333;
 			background: #333;
 			color: #fff;
-			padding: 3px 12px;
+			font-size: 0.75em;
+			padding: 5px 10px;
 			margin: 3px;
 			cursor: pointer;
 		}
@@ -420,17 +396,25 @@
 			background: #333;
 			color: #fff;
 		}
-		.filters {
-			display: -webkit-flex;
-			display: -moz-flex;
-			display: -ms-flex;
-			display: -o-flex;
-			display: flex;
-		}
 		.filter {
-			/*width: 50%;*/
-			height: 350px;
-			overflow-y: scroll;
+			z-index: 100;
+		    background: #efefef;
+		    height: 100vh;
+		    top: 0;
+		    width: calc(100% - 20px );
+		    max-width: 500px;
+		    overflow-y: scroll;
+		    position: fixed;
+		    padding: 10px;
+		    left: 0;
+		    -webkit-overflow-scrolling: touch; /* Lets it scroll lazy */
+		    transition: left 0.18s;
+		}.filter.hidden{
+			width: 90%;
+			left: calc(-100% - 25px );
+		}
+		#debug {
+			text-align: center;
 		}
 		
 	</style>
@@ -443,14 +427,10 @@
 		<span class="sort" sort-type="apk">Sortera efter APK</span>
 		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
 	</div>
-	<!-- <div class="filters"> -->
-		<div class="filter styles">
-			<span class="show-all-styles show-all filter-type">Alla</span>
-		</div>
-		<!-- <div class="filter breweries">
-			<span class="show-all-breweries show-all filter-type">Alla</span>
-		</div> -->
-	<!-- </div> -->
+	<div id="debug"></div>
+	<div class="filter styles hidden">
+		<span class="show-all-styles show-all filter-type">Alla</span>
+	</div>
 	<ul id="main">
 	</ul>
 </body>
