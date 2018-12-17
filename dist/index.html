@@ -30,46 +30,48 @@
 
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
-					// console.log(value.name);
 					if(!value.rating){
 						value.rating = 1;
 						value.ratingCount = 0;
 					}
-					if ($.inArray(value.type, styles) == -1){
-						styles.push(value.type);
-					}
-					if ($.inArray(value.brewery, breweries) == -1){
-						breweries.push(value.brewery);
-					}
-					var apk = 0;
-					if(value.alch){
-						apk = value.alch.replace('%','');
-						apk = apk / 100;
-						apk = apk * parseInt(value.volym);
-						apk = apk / parseInt(value.pris);
-					} 
-					var beer = {
-						output: '<li class="pivo" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
-						rating: value.rating,
-						apk: apk,
-					};
+					if(parseInt(value.pris) > 100) {
+						
+					} else {
+						if ($.inArray(value.type, styles) == -1){
+							styles.push(value.type);
+						}
+						if ($.inArray(value.brewery, breweries) == -1){
+							breweries.push(value.brewery);
+						}
+						var apk = 0;
+						if(value.alch){
+							apk = value.alch.replace('%','');
+							apk = apk / 100;
+							apk = apk * parseInt(value.volym);
+							apk = apk / parseInt(value.pris);
+						} 
+						var beer = {
+							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
+							rating: value.rating,
+							apk: apk,
+						};
 
-					beer.output += '<span class="type">' + value.type + '</span>' ;
-					beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i>'; 
-					beer.output += '<span> | ' + value.alch + '</span></strong>';
-					beer.output += '<span> av: ' + value.brewery + ' - ' + value.origin + '</span>';
-					
-					beer.output += '<span>' + value.pris + ':- <i>(APK: ' + parseFloat(apk).toFixed(2) + ')</i></span>';
-					
-					var searchArgs = value.name +  ' ' + value.subline;
-					searchArgs = searchArgs.replace('&','');
-					var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
-					beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
-					beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
-					beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
-					beerlist.push(beer);
+						beer.output += '<span class="type">' + value.type + '</span>' ;
+						beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i>'; 
+						beer.output += '<span> | ' + value.alch + '</span></strong>';
+						beer.output += '<span> av: ' + value.brewery + ' - ' + value.origin + '</span>';
+						
+						beer.output += '<span>' + value.pris + ':- <i>(APK: ' + parseFloat(apk).toFixed(2) + ')</i></span>';
+						
+						var searchArgs = value.name +  ' ' + value.subline;
+						searchArgs = searchArgs.replace('&','');
+						var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
+						beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
+						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
+						beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
+						beerlist.push(beer);
+					}
 				})
-				// $('.pivo').toggleClass('hide');
 
 				$.each(styles, function(i, val){
 					selection.push(convertToSlug(val));
@@ -128,7 +130,7 @@
 			    return Text
 			        .toLowerCase()
 			        .replace(/[^\w ]+/g,'')
-			        .replace(/ +/g,'-')
+			        .replace(/ +/g,' ')
 			        ;
 			}
 
@@ -165,7 +167,6 @@
 				if(selection.length == fullSelLength){
 					$('.show-all').removeClass('hide');
 				}
-				// console.log(selection);
 			})
 
 			$('#main').on('click','.tap',function(){
@@ -173,10 +174,8 @@
 				var beerId = $(this).attr('data-id');
 				var beerName = $(this).attr('data-name');
 				var beerSubline = $(this).attr('data-sub');
-				// console.log(beer);
 				var target = $(this).parent('.links').parent('.pivo').find('.response');
-				searchRating(beerUrl, beerId, target, beerName, beerSubline);
-				// rating(beer, target);
+				searchRating(beerName, beerSubline, beerId, beerUrl, target);
 			})
 
 			$( "#main" ).on( "swiperight", function(){
@@ -185,59 +184,67 @@
 			});
 			$( ".filter" ).on( "swipeleft", function(){
 				$('.filter').addClass('hidden');
-				$('body, hmtl').removeClass('stil');
+				$('body, html').removeClass('stil');
 			});
-
-
-
-			function searchRating(dataurl, dataid, target, dataname, datasubline){
-				// console.log(dataurl);
+			
+			function searchRating(dataname, datasubline, dataid, dataurl, target){
+				var searchstring = convertToSlug(dataname) + ' ' + convertToSlug(datasubline);
 				$.ajax({
-				    url: dataurl,
-				    type: "GET",
-				    success: function (data) {
-				    	// console.log(data);
-				    	if(data.response.beers.count > 0) {
-				    		$.ajax({
-							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
-							    type: "GET",
-							    success: function (data) {
-							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
-						    		var beerRating = { 
-						    			ratingCount: data.response.beer['rating_count'],
-						    			ratingScore: data.response.beer['rating_score']};
-						    		target.html(output);
-						    		database.ref('beers/' + dataid).update({
-						    			name: dataname,
-						    			subline: datasubline,
-						    			brewery: data.response.beer.brewery['brewery_name'],
-						    			type: data.response.beer['beer_style'],
-					    				rating: data.response.beer['rating_score'],
-					    				ratingCount: data.response.beer['rating_count'],
-						    		});
-
-							    },
-							    error: function () {
-							    	return false
-							    }
+				    url: 'https://api.ratebeer.com/v1/api/graphql/',
+				    method: 'POST',
+				    headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'access-control-allow-origin' : 'https://pivo-225207.firebaseapp.com/',
+						'Access-Control-allow-credentials': true,
+						'x-api-key': 'nROvtHU2JvlU6Ksk5it23fZ8xXwqhHL90CP5tRG6'
+					},
+				    data: JSON.stringify({query: `{
+				    	beerSearch(query: "` + searchstring + `",first: 1){
+						  	items: items {
+								name,
+								averageRating,
+								brewer {
+									name
+								},
+								ratingCount,
+								style {
+									name
+								},
+								imageUrl
+							}
+						}
+					}`}),
+				    dataType: 'json',
+				    success: function(response) {
+				    	var beer = response.data.beerSearch.items[0];
+				        if (beer) {
+							var output = '<span>' + beer.style.name + '<br>' + beer.name + ' av: ' + beer.brewer.name + '<br></span><div class="rating">' + beer.averageRating + ' <span>på ' + beer.ratingCount + ' ratings</span></div>';
+							var beerRating = { 
+								ratingCount: beer.ratingCount,
+								ratingScore: beer.averageRating};
+							target.html(output);
+							database.ref('beers/' + dataid).update({
+								name: dataname,
+								subline: datasubline,
+								brewery: beer.brewer.name,
+								type: beer.style.name,
+								rating: beer.averageRating,
+								ratingCount: beer.ratingCount,
 							});
-				    	} else {
-				    		var beerRating = { 
-				    			ratingCount: 0,
-				    			ratingScore: 0}
-				    		var output = '<div class="rating">Ölen hittades inte.. <a href="https://untappd.com/search" target="_blank">Sök säljv</a></div>';
-				    		localStorage.setItem(dataid,JSON.stringify(beerRating));
+
+				        } else {
+				        	var output = '<div class="rating">Ölen hittades inte.. <a href="https://untappd.com/search" target="_blank">Sök säljv</a></div>';
 				    		target.html(output);
-				    	}
+				        }
 				    },
 				    error: function (data) {
-				    	console.log(data);
-				    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
-				    	target.html(output);
-				    	return false
+				    	var output = '<div class="rating">Ölen hittades inte.. <a href="https://untappd.com/search" target="_blank">Sök säljv</a></div>';
+			    		target.html(output);
 				    }
 				});
 			}
+
 		});
 	</script>
 	<style>
