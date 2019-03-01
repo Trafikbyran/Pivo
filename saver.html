@@ -21,13 +21,13 @@
 			
 			const database = firebase.database();
 			// database.ref('beers/').remove();
-
+			console.log('started');
 			$.ajax({
-			    url: "xml.xml",
+			    url: "https://www.systembolaget.se/api/assortment/products/xml",
 			    type: "GET",
 			    dataType: "xml",
 			    success: function (xml) {
-			    	// console.log(xml);
+			    	console.log(xml);
 					$(xml).find('artikel').each(function(){
 						if($(this).find('Varugrupp').text() == 'Öl' && $(this).find('Utgått').text() == '0'){
 							var beer = {
@@ -45,22 +45,21 @@
 							}
 
 							
-							// database.ref('beers/' + id).once('value').then(function(snapshot) {
-							// 	console.log(snapshot.val());
-
-							// });
-							database.ref('beers/' + beer.id).update({ 
-									"art": beer.art,
-									"name": beer.name,
-									"subline": beer.subline,
-									"brewery": beer.brewery,
-									"type": beer.type,
-									"pris": beer.pris,
-									"volym": beer.volym,
-									"packing": beer.packing,
-									"origin": beer.origin,
-									"alch": beer.alch,
+							database.ref('beers/' + beer.id).once('value').then(function(snapshot) {
+								console.log(snapshot.val());
 							});
+							// database.ref('beers/' + beer.id).update({ 
+							// 	"art": beer.art,
+							// 	"name": beer.name,
+							// 	"subline": beer.subline,
+							// 	"brewery": beer.brewery,
+							// 	"type": beer.type,
+							// 	"pris": beer.pris,
+							// 	"volym": beer.volym,
+							// 	"packing": beer.packing,
+							// 	"origin": beer.origin,
+							// 	"alch": beer.alch,
+							// });
 							
 						}
 					});
@@ -72,74 +71,75 @@
 			    }
 			});
 
-			$('#main').on('click','.tap',function(){
-				var beerUrl = $(this).attr('data-url');
-				var beerId = $(this).attr('data-id');
-				// console.log(beer);
-				var target = $(this).parent('.links').parent('.pivo').find('.response');
-				searchRating(beerUrl, beerId, target);
-				// rating(beer, target);
-			})
 
-			function searchRating(dataurl, dataid, target){
-				// console.log(dataurl);
+			// $('#main').on('click','.tap',function(){
+			// 	var beerUrl = $(this).attr('data-url');
+			// 	var beerId = $(this).attr('data-id');
+			// 	// console.log(beer);
+			// 	var target = $(this).parent('.links').parent('.pivo').find('.response');
+			// 	searchRating(beerUrl, beerId, target);
+			// 	// rating(beer, target);
+			// })
+
+			// function searchRating(dataurl, dataid, target){
+			// 	// console.log(dataurl);
 				
-				$.ajax({
-				    url: dataurl,
-				    type: "GET",
-				    success: function (data) {
-				    	// console.log(data);
-				    	if(data.response.beers.count > 0) {
-				    		$.ajax({
-							    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
-							    type: "GET",
-							    success: function (data) {
-							    	// console.log(data.response.beer['rating_score']);
-							    	// console.log(data.response.beer['beer_name']);
-							    	// console.log(data.response.beer.brewery['brewery_name']);
-							    	// console.log(data.response.beer);
-							    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
-						    		var beerRating = { 
-						    			ratingCount: data.response.beer['rating_count'],
-						    			ratingScore: data.response.beer['rating_score']};
-						    		target.append(output);
-						    		$.ajax({
-						    			url: 'beers',
-						    			type: 'POST',
-						    			data: {
-						    				id: dataid,
-						    				name: data.response.beer['beer_name'],
-						    				rating: data.response.beer['rating_score'],
-						    				ratingCount: data.response.beer['rating_count'],
-						    			},
-						    			success: (data) => {
-						    				console.log('sucess');
-						    			},
-						    		});
-						    		// localStorage.setItem(dataid,JSON.stringify(beerRating));
+			// 	$.ajax({
+			// 	    url: dataurl,
+			// 	    type: "GET",
+			// 	    success: function (data) {
+			// 	    	// console.log(data);
+			// 	    	if(data.response.beers.count > 0) {
+			// 	    		$.ajax({
+			// 				    url: "https://api.untappd.com/v4/beer/info/" + data.response.beers.items[0].beer['bid'] + "/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C",
+			// 				    type: "GET",
+			// 				    success: function (data) {
+			// 				    	// console.log(data.response.beer['rating_score']);
+			// 				    	// console.log(data.response.beer['beer_name']);
+			// 				    	// console.log(data.response.beer.brewery['brewery_name']);
+			// 				    	// console.log(data.response.beer);
+			// 				    	var output = '<span>' + data.response.beer['beer_style'] + '<br>' + data.response.beer['beer_name'] + ' av: ' + data.response.beer.brewery['brewery_name'] + '<br></span><div class="rating">' + data.response.beer['rating_score'] + ' <span>på ' + data.response.beer['rating_count'] + ' ratings</span></div>';
+			// 			    		var beerRating = { 
+			// 			    			ratingCount: data.response.beer['rating_count'],
+			// 			    			ratingScore: data.response.beer['rating_score']};
+			// 			    		target.append(output);
+			// 			    		$.ajax({
+			// 			    			url: 'beers',
+			// 			    			type: 'POST',
+			// 			    			data: {
+			// 			    				id: dataid,
+			// 			    				name: data.response.beer['beer_name'],
+			// 			    				rating: data.response.beer['rating_score'],
+			// 			    				ratingCount: data.response.beer['rating_count'],
+			// 			    			},
+			// 			    			success: (data) => {
+			// 			    				console.log('sucess');
+			// 			    			},
+			// 			    		});
+			// 			    		// localStorage.setItem(dataid,JSON.stringify(beerRating));
 
-							    },
-							    error: function () {
-							    	return false
-							    }
-							});
-				    	} else {
-				    		var beerRating = { 
-				    			ratingCount: 0,
-				    			ratingScore: 0}
-				    		var output = '<div class="rating">Ölen hittades inte..</div>';
-				    		localStorage.setItem(dataid,JSON.stringify(beerRating));
-				    		target.append(output);
-				    	}
-				    },
-				    error: function (data) {
-				    	console.log(data);
-				    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
-				    	target.append(output);
-				    	return false
-				    }
-				});
-			}
+			// 				    },
+			// 				    error: function () {
+			// 				    	return false
+			// 				    }
+			// 				});
+			// 	    	} else {
+			// 	    		var beerRating = { 
+			// 	    			ratingCount: 0,
+			// 	    			ratingScore: 0}
+			// 	    		var output = '<div class="rating">Ölen hittades inte..</div>';
+			// 	    		localStorage.setItem(dataid,JSON.stringify(beerRating));
+			// 	    		target.append(output);
+			// 	    	}
+			// 	    },
+			// 	    error: function (data) {
+			// 	    	console.log(data);
+			// 	    	var output = '<div class="rating">Kommer inte åt Untapped</div>';
+			// 	    	target.append(output);
+			// 	    	return false
+			// 	    }
+			// 	});
+			// }
 		});
 	</script>
 	<style>
