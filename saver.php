@@ -20,150 +20,212 @@
 		$xml = new SimpleXMLElement(file_get_contents('https://www.systembolaget.se/api/assortment/products/xml'));
 		$beer = [];
 		foreach ($xml->artikel as $key => $value) {
-			if($value->Varugrupp == 'Öl') {
-				$beer[] = $value;
+			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'FS') {
+				$beer[] = $value; 
 			}
 		}
 		// print_r($beer);
 	 ?>
 	<script>
-		$( document ).ready(function() {
-			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
-			// console.log(phpxml);
-			$.each(phpxml,function(index,value){
-				console.log(value);
-			})
-			// const database = firebase.database();
-			// database.ref('beers/').remove();
-			var i = 0;
-			var y = 0; // turned of
-			console.log('started');
-			// $.ajax({
-			//     url: "xml.xml",
-			//     type: "GET",
-			//     dataType: "xml",
-			//     success: function (xml) {
-			//     	console.log(xml);
-			// 		$(xml).find('artikel').each(function(){
-			// 			var that = this;
-						
-			// 			if($(that).find('Varugrupp').text() == 'Öl' && $(that).find('Utgått').text() == '0' && $(that).find('Sortiment').text() == 'FS'){
-			// 				i = i + 2000;
-			// 				if(i > y){
-			// 					return;
-			// 				}
+		const database = firebase.database();
+		//database.ref('beers/').remove();
+		var i = 0;
+		function searchString(name){
+			var output = JSON.stringify({query: `{
+		    	beerSearch(query: "` + name + `",first: 1){
+				  	items: items {
+						name,
+						averageRating,
+						abv,
+						brewer {
+							name
+						},
+						ratingCount,
+						style {
+							name
+						},
+						imageUrl
+					}
+				}
+			}`});
+			return output
+		}
+		function rateBeerCall(beer,querys,x,callback){
+			console.log('query');
+			console.log(querys[x]);
+			if(querys[x]){
+				$.ajax({
+				    url: 'https://api.ratebeer.com/v1/api/graphql/',
+				    method: 'POST',
+				    headers: {
+						'Content-Type': 'application/json',
+						'Accept': 'application/json',
+						'access-control-allow-origin' : 'https://pivo-225207.firebaseapp.com/',
+						'Access-Control-allow-credentials': true,
+						'x-api-key': 'nROvtHU2JvlU6Ksk5it23fZ8xXwqhHL90CP5tRG6'
+					},
+				    data: querys[x],
+				    dataType: 'json',
+				    success: function(response) {
+				    	// console.log(response);
+				    	callback(beer,querys,x,response);
+				    },
+				    error: function (response) {
+				    	console.log(response);
+				    }
+				});
+			}
+		}
+		function matcher(systemet,apibeer){
+			var systemetAbv = parseFloat(systemet.alch);
+			var apibeerAbv = apibeer.abv;
+			var diff;
+			if (systemetAbv > apibeerAbv){
+				diff = systemetAbv-apibeerAbv;
+			}
+			else {
+				diff = apibeerAbv-systemetAbv;
+			}
+			return diff;
 
-			// 				setTimeout(function(){
-			// 					console.log('----------------------');
-			// 					var beer = {
-			// 						id: $(that).find('Artikelid').text(),
-			// 						art: $(that).find('Varnummer').text(),
-			// 						name: $(that).find('Namn').text(),
-			// 						subline: $(that).find('Namn2').text(),
-			// 						brewery: $(that).find('Producent').text(),
-			// 						type: $(that).find('Typ').text(),
-			// 						pris: $(that).find('Prisinklmoms').text(),
-			// 						volym: $(that).find('Volymiml').text(),
-			// 						packing: $(that).find('Forpackning').text(),
-			// 						origin: $(that).find('Ursprunglandnamn').text(),
-			// 						alch: $(that).find('Alkoholhalt').text(),
-			// 						sort: $(that).find('Sortiment').text(),
-			// 					}
-			// 					var abv = parseFloat(beer.alch);
-			// 					$.ajax({
-			// 					    url: 'https://api.ratebeer.com/v1/api/graphql/',
-			// 					    method: 'POST',
-			// 					    headers: {
-			// 							'Content-Type': 'application/json',
-			// 							'Accept': 'application/json',
-			// 							'access-control-allow-origin' : 'https://pivo-225207.firebaseapp.com/',
-			// 							'Access-Control-allow-credentials': true,
-			// 							'x-api-key': 'nROvtHU2JvlU6Ksk5it23fZ8xXwqhHL90CP5tRG6'
-			// 						},
-			// 					    data: JSON.stringify({query: `{
-			// 					    	beerSearch(query: "` + beer.name + beer.subline + `",first: 1){
-			// 							  	items: items {
-			// 									name,
-			// 									averageRating,
-			// 									abv,
-			// 									brewer {
-			// 										name
-			// 									},
-			// 									ratingCount,
-			// 									style {
-			// 										name
-			// 									},
-			// 									imageUrl
-			// 								}
-			// 							}
-			// 						}`}),
-			// 					    dataType: 'json',
-			// 					    success: function(response) {
-			// 					    	var ratebeer = response.data.beerSearch.items[0];
-			// 					        if (ratebeer) {
-			// 					        	console.log('found in RateBeer');
-			// 					        	console.log(ratebeer);
-			// 					        	ratebeer.abv = Math.round(ratebeer.abv * 100) / 100;
-			// 					        	console.log(ratebeer.abv);
-			// 					        	if(abv == ratebeer.abv && ratebeer.ratingCount > 10){
-			// 				     //    			database.ref('beers/' + beer.id).update({ 
-			// 									// 	"art": beer.art,
-			// 									// 	"name": beer.name,
-			// 									// 	"subline": beer.subline,
-			// 									// 	"brewery": beer.brewery,
-			// 									// 	"type": beer.type,
-			// 									// 	"pris": beer.pris,
-			// 									// 	"volym": beer.volym,
-			// 									// 	"packing": beer.packing,
-			// 									// 	"origin": beer.origin,
-			// 									// 	"alch": beer.alch,
-			// 									// 	"sort": beer.sort,
-			// 									// 	"avgrate": ratebeer.averageRating,
-			// 									// 	"ratecount": ratebeer.ratingCount,
-			// 									// 	"image": ratebeer.imageUrl,
-			// 									// 	"ratebeername": ratebeer.name, 
-			// 									// 	"updated": true,
-			// 									// });
-			// 									console.log('good match, saved to DB');
-			// 					        	} else {
-			// 					        		console.log('not that good match..');
-			// 					        	}
-			// 							} else {
-			// 								console.log('Not found in RateBeer');
-			// 								// database.ref('beers/' + beer.id).update({ 
-			// 								// 	"art": beer.art,
-			// 								// 	"name": beer.name,
-			// 								// 	"subline": beer.subline,
-			// 								// 	"brewery": beer.brewery,
-			// 								// 	"type": beer.type,
-			// 								// 	"pris": beer.pris,
-			// 								// 	"volym": beer.volym,
-			// 								// 	"packing": beer.packing,
-			// 								// 	"origin": beer.origin,
-			// 								// 	"alch": beer.alch,
-			// 								// 	"sort": beer.sort,
-			// 								// 	"avgrate": null,
-			// 								// 	"ratecount": null,
-			// 								// 	"image": null,
-			// 								// 	"ratebeername": null, 
-			// 								// 	"updated": false,
-			// 								// });
-			// 							}
-			// 					    },
-			// 					    error: function (data) {
-			// 					    	console.log(data);
-			// 					    }
-			// 					});
-			// 				},i);
-			// 			}
-			// 		});
-				
+		}
+		function switcher(systemet,querys,x,value){
+			console.log('switcher in:');
+			var apibeer = value.data.beerSearch.items[0];
+			if(apibeer) {
+				console.log(systemet);
+				console.log(apibeer);
+				var match = matcher(systemet,apibeer);
+				if(match < 1 && apibeer.ratingCount > 10){
+					saveToDB(systemet,apibeer);
+				} else {
+					console.log('no match');
+					console.log(match);
+					console.log(querys.length);
+					console.log(x);
+					if(querys.length > x){
+						x++
+						i = i + 4000;
+						setTimeout(function(){
+							rateBeerCall(systemet,querys,x,switcher),
+							i
+						});
+					} else {
+						saveToDBNocomplete(systemet);
+					}
+				}
+			} else {
+				console.log('no results');
+				if(querys.length > x){
+					x++
+					i = i + 4000;
+					setTimeout(function(){
+						rateBeerCall(systemet,querys,x,switcher),
+						i
+					});
+				} else {
+					saveToDBNocomplete(systemet);
+				}
+			}
+			console.log('switcher out!');
+		}
+		function saveToDB(systemet,apibeer){
+			database.ref('beers/' + systemet.id).update({ 
+				"art": systemet.art,
+				"name": systemet.name,
+				"subline": systemet.subline,
+				"brewery": systemet.brewery,
+				"type": systemet.type,
+				"pris": systemet.pris,
+				"volym": systemet.volym,
+				"packing": systemet.packing,
+				"origin": systemet.origin,
+				"alch": systemet.alch,
+				"sort": systemet.sort,
+				"avgrate": apibeer.averageRating,
+				"ratecount": apibeer.ratingCount,
+				"image": apibeer.imageUrl,
+				"ratebeername": apibeer.name, 
+				"updated": true,
+			});
+			console.log('saved to DB');
+		}
+		function saveToDBNocomplete(systemet){
+			database.ref('beers/' + systemet.id).update({ 
+				"art": systemet.art,
+				"name": systemet.name,
+				"subline": systemet.subline,
+				"brewery": systemet.brewery,
+				"type": systemet.type,
+				"pris": systemet.pris,
+				"volym": systemet.volym,
+				"packing": systemet.packing,
+				"origin": systemet.origin,
+				"alch": systemet.alch,
+				"sort": systemet.sort,
+				"updated": false,
+			});
+			console.log('saved to DB - not complete');
+		}
+		$( document ).ready(function() {
+			
+			var savedBeers = Array();
+			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
+						
+			var y = 8000;
+			console.log('started');
+			database.ref('beers/').once('value').then(function(snapshot) {
+				$.each(snapshot.val(), function(key, value){
+					savedBeers[key] = value;
+				});
+				$.each(phpxml,function(key,value){
 					
-			//     },
-			//     error: function () {
-			//     	$("#main").html('failed');
-			//     }
-			// });
+					if(typeof value.Namn2 != 'string'){
+						value.Namn2 = '';
+					}
+					var beer = {
+						id: value.Artikelid,
+						art: value.Varnummer,
+						name: value.Namn,
+						subline: value.Namn2,
+						brewery: value.Producent,
+						type: value.Typ,
+						pris: value.Prisinklmoms,
+						volym: value.Volymiml,
+						packing: value.Forpackning,
+						origin: value.Ursprunglandnamn,
+						alch: value.Alkoholhalt,
+						sort: value.Sortiment,
+					}
+					if(!savedBeers[parseInt(beer.id)]){
+						i = i + 4000;
+						if(i > y){
+							return;
+						}
+						setTimeout(function(){
+							console.log('----------------------');
+							var abv = parseFloat(beer.alch);
+							var querys = [];
+							if(beer.subline){
+								querys = [
+									searchString(beer.name + ' ' + beer.subline + ' ' + beer.brewery),
+									searchString(beer.name + ' ' + beer.subline),
+									searchString(beer.brewery + ' ' + beer.subline),
+									searchString(beer.name + ' ' + beer.brewery),
+									searchString(beer.name),
+									searchString(beer.subline),
+								]
+							}else {
+								querys = [
+									searchString(beer.name + ' ' + beer.brewery),
+									searchString(beer.name),
+								]
+							}
+							rateBeerCall(beer,querys,0,switcher);
+						},i);
+					}
+				})	
+			});
 		});
 	</script>
 	<style>
