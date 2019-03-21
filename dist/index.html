@@ -30,9 +30,9 @@
 
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
-					if(!value.rating){
-						value.rating = 1;
-						value.ratingCount = 0;
+					if(!value.avgrate){
+						value.avgrate = 0;
+						value.ratecount = 0;
 					}
 					if(parseInt(value.pris) > 100) {
 						
@@ -51,8 +51,8 @@
 							apk = apk / parseInt(value.pris);
 						} 
 						var beer = {
-							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.rating + '">',
-							rating: value.rating,
+							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.avgrate + '">',
+							rating: value.avgrate,
 							apk: apk,
 						};
 
@@ -66,9 +66,10 @@
 						var searchArgs = value.name +  ' ' + value.subline;
 						searchArgs = searchArgs.replace('&','');
 						var search = 'https://api.untappd.com/v4/search/beer/?client_id=DFECDFED0899195425F1964E1059320B5AD101A8&client_secret=01903E9D193A291793465F79263B30EB4DA7F04C&q=' + searchArgs;
-						beer.output += '<div class="links"><button class="tap" data-name="' + value.name + '" data-sub="' + value.subline + '" data-id="' + key + '" data-url="' + search +'">Rate</button>';
+						beer.output += '<div class="links">';
+						beer.output += '<a href="https://www.ratebeer.com/search?q=' + value.ratebeername + '" target="_blank">RateBeer</a>';
 						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
-						beer.output += '<div class="response"><div class="rating">' + value.rating + '<span>på ' + value.ratingCount + ' ratings</span></div></div></lI>';
+						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span></div></div></lI>';
 						beerlist.push(beer);
 					}
 				})

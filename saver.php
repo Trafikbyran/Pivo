@@ -103,7 +103,7 @@
 					console.log(match);
 					console.log(querys.length);
 					console.log(x);
-					if(querys.length > x){
+					if(querys.length > x + 1){
 						x++
 						i = i + 4000;
 						setTimeout(function(){
@@ -116,7 +116,7 @@
 				}
 			} else {
 				console.log('no results');
-				if(querys.length > x){
+				if(querys.length > x + 1){
 					x++
 					i = i + 4000;
 					setTimeout(function(){
@@ -172,7 +172,7 @@
 			var savedBeers = Array();
 			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
 						
-			var y = 8000;
+			var y = 80000;
 			console.log('started');
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
