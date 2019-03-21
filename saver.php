@@ -20,7 +20,7 @@
 		$xml = new SimpleXMLElement(file_get_contents('https://www.systembolaget.se/api/assortment/products/xml'));
 		$beer = [];
 		foreach ($xml->artikel as $key => $value) {
-			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'FS') {
+			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'BS') {
 				$beer[] = $value; 
 			}
 		}
@@ -197,6 +197,7 @@
 						alch: value.Alkoholhalt,
 						sort: value.Sortiment,
 					}
+					var querys = [];
 					if(!savedBeers[parseInt(beer.id)]){
 						i = i + 4000;
 						if(i > y){
@@ -204,16 +205,14 @@
 						}
 						setTimeout(function(){
 							console.log('----------------------');
-							var abv = parseFloat(beer.alch);
-							var querys = [];
 							if(beer.subline){
 								querys = [
 									searchString(beer.name + ' ' + beer.subline + ' ' + beer.brewery),
 									searchString(beer.name + ' ' + beer.subline),
 									searchString(beer.brewery + ' ' + beer.subline),
 									searchString(beer.name + ' ' + beer.brewery),
-									searchString(beer.name),
 									searchString(beer.subline),
+									searchString(beer.name),
 								]
 							}else {
 								querys = [
@@ -223,115 +222,15 @@
 							}
 							rateBeerCall(beer,querys,0,switcher);
 						},i);
+					} else {
+						console.log('alreadt saved');
 					}
 				})	
 			});
 		});
 	</script>
-	<style>
-		body {
-			margin: 0;
-		}
-		#main {
-			margin: 0;
-			padding: 0;
-			display: -webkit-flex;
-			display: -moz-flex;
-			display: -ms-flex;
-			display: -o-flex;
-			display: flex;
-			-webkit-flex-wrap: wrap;
-			-moz-flex-wrap: wrap;
-			-ms-flex-wrap: wrap;
-			-o-flex-wrap: wrap;
-			flex-wrap: wrap;
-			-ms-align-items: center;
-			align-items: center;
-		}
-		.pivo {
-			list-style: none;
-			background: #333;
-			min-height: 200px;
-			width: 100%;
-			text-align: center;
-			color: #ccc;
-			margin: 10px;
-			padding: 30px 10px 10px 10px;
-			position: relative;
-			display: -webkit-flex;
-			display: -moz-flex;
-			display: -ms-flex;
-			display: -o-flex;
-			display: flex;
-			-webkit-flex-direction: column;
-			-moz-flex-direction: column;
-			-ms-flex-direction: column;
-			-o-flex-direction: column;
-			flex-direction: column;
-			justify-content: flex-start;
-			font-family: 'Helvetica';
-		}
-		@media screen and (min-width: 467px) {
-			.pivo {
-				width: calc(50% - 40px)
-			}
-		}
-		@media screen and (min-width: 767px) {
-			.pivo {
-				width: 300px;
-			}
-		}
-		.pivo strong {
-			display: block;
-			font-size: 0.9em;
-			font-weight: 300;
-		}
-		.pivo strong i {
-			/*font-weight: 400;*/
-		}
-		.pivo span {
-			font-size: 0.7em;
-			/*text-transform: uppercase;*/
-			font-weight: 400;
-		}
-		span.type {
-			font-style: italic;
-			font-size: 0.7em;
-		}
-		.tap, a {
-			text-decoration: none;
-			display: inline-block;
-			margin: 10px 3px;
-			color: #ccc;
-			border: 1px solid #ccc;
-			padding: 2px 15px;
-			font-size: 0.8em;
-			background: transparent;
-			cursor: pointer;
-		}
-		.tap:focus, .tap,hover {
-			outline: none;
-		}
-		.response {
-			width: 100%;
-			position: absolute;
-			bottom: 0;
-			left: 0;
-		} 
-		.response .rating {
-			background: gold;
-			padding: 20px 10px;
-			color: #333;
-		}
-		.response .rating span{
-			display: block;
-			font-size: 0.6em;
-			text-transform: uppercase;
-		}
-		
-	</style>
 	<meta charset="UTF-8">
-	<title>Pivo</title>
+	<title>Pivo - saver</title>
 </head>
 <body>
 	<span class="date"></span>

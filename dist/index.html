@@ -69,7 +69,7 @@
 						beer.output += '<div class="links">';
 						beer.output += '<a href="https://www.ratebeer.com/search?q=' + value.ratebeername + '" target="_blank">RateBeer</a>';
 						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
-						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span></div></div></lI>';
+						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span><span>' + value.ratebeername + '</span><span class="flagg-beer" data-id="' + key + '">Uppdatera</span></div></div></lI>';
 						beerlist.push(beer);
 					}
 				})
@@ -97,6 +97,11 @@
 
 			});
 
+			function flagBeer(id){
+				database.ref('beers/' + id).update({ 
+					"updated": false,
+				});
+			}
 			function SortByName(a, b){
 			  var aName = a.name.toLowerCase();
 			  var bName = b.name.toLowerCase(); 
@@ -134,7 +139,9 @@
 			        .replace(/ +/g,' ')
 			        ;
 			}
-
+			$('#main').on('click','.flagg-beer',function(e){
+				flagBeer($(this).attr('data-id'));
+			})
 			$('.sort').click(function(e){
 				$('.sort').removeClass('active')
 				$(this).addClass('active');
