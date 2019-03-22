@@ -69,7 +69,13 @@
 						beer.output += '<div class="links">';
 						beer.output += '<a href="https://www.ratebeer.com/search?q=' + value.ratebeername + '" target="_blank">RateBeer</a>';
 						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
-						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span><span>' + value.ratebeername + '</span><span class="flagg-beer" data-id="' + key + '">Uppdatera</span></div></div></lI>';
+						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span><span>' + value.ratebeername + '</span>';
+						if(value.updated == true){
+							beer.output += '<span class="flagg-beer" data-id="' + key + '">Uppdatera</span>'
+						} else {
+							beer.output += '<span class="flagged-beer" data-id="' + key + '">Väntande</span>'
+						}
+						beer.output += '</div></div></lI>';
 						beerlist.push(beer);
 					}
 				})
@@ -141,6 +147,9 @@
 			}
 			$('#main').on('click','.flagg-beer',function(e){
 				flagBeer($(this).attr('data-id'));
+				$(this).removeClass('flagg-beer');
+				$(this).addClass('flagged-beer');
+				$(this).text('Väntande');
 			})
 			$('.sort').click(function(e){
 				$('.sort').removeClass('active')
@@ -295,7 +304,7 @@
 		.pivo {
 			list-style: none;
 			background: #333;
-			min-height: 200px;
+			min-height: 260px;
 			width: 100%;
 			overflow: hidden;
 			text-align: center;
@@ -430,6 +439,17 @@
 		}
 		#debug {
 			text-align: center;
+		}
+		.flagg-beer, .flagged-beer {
+			padding: 5px 15px;
+			cursor: pointer;
+			transition: 0.25s;
+		}
+		.flagg-beer {
+			text-decoration: underline;
+		}
+		.flagged-beer {
+			text-decoration: line-through;
 		}
 		
 	</style>
