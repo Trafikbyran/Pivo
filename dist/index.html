@@ -34,9 +34,10 @@
 						value.avgrate = 0;
 						value.ratecount = 0;
 					}
-					if(parseInt(value.pris) > 100) {
+					if(parseInt(value.pris) > 100 ) {
 						
-					} else {
+					} 
+					else if(value.updated == true) {
 						if ($.inArray(value.type, styles) == -1){
 							styles.push(value.type);
 						}
@@ -70,11 +71,7 @@
 						beer.output += '<a href="https://www.ratebeer.com/search?q=' + value.ratebeername + '" target="_blank">RateBeer</a>';
 						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
 						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span><span>' + value.ratebeername + '</span>';
-						if(value.updated == true){
-							beer.output += '<span class="flagg-beer" data-id="' + key + '">Uppdatera</span>'
-						} else {
-							beer.output += '<span class="flagged-beer" data-id="' + key + '">Väntande</span>'
-						}
+						beer.output += '<span class="flagg-beer" data-id="' + key + '">Uppdatera</span>';
 						beer.output += '</div></div></lI>';
 						beerlist.push(beer);
 					}

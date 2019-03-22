@@ -20,7 +20,7 @@
 		$xml = new SimpleXMLElement(file_get_contents('https://www.systembolaget.se/api/assortment/products/xml'));
 		$beer = [];
 		foreach ($xml->artikel as $key => $value) {
-			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'BS') {
+			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'FS') {
 				$beer[] = $value; 
 			}
 		}
@@ -96,9 +96,10 @@
 				console.log(systemet);
 				console.log(apibeer);
 				var match = matcher(systemet,apibeer);
-				if(match < 1 && apibeer.ratingCount > 10){
+				if(match < 1){
 					saveToDB(systemet,apibeer);
-				} else {
+				} 
+				else {
 					console.log('no match');
 					console.log(match);
 					console.log(querys.length);
@@ -110,7 +111,8 @@
 							rateBeerCall(systemet,querys,x,switcher),
 							i
 						});
-					} else {
+					} 
+					else {
 						saveToDBNocomplete(systemet);
 					}
 				}
@@ -123,7 +125,8 @@
 						rateBeerCall(systemet,querys,x,switcher),
 						i
 					});
-				} else {
+				} 
+				else {
 					saveToDBNocomplete(systemet);
 				}
 			}
@@ -198,7 +201,7 @@
 						sort: value.Sortiment,
 					}
 					var querys = [];
-					if(!savedBeers[parseInt(beer.id)]){
+					if(!savedBeers[parseInt(beer.id)] || !savedBeers[parseInt(beer.id)]['updated']){
 						i = i + 4000;
 						if(i > y){
 							return;
@@ -223,7 +226,7 @@
 							rateBeerCall(beer,querys,0,switcher);
 						},i);
 					} else {
-						console.log('alreadt saved');
+						console.log('already saved');
 					}
 				})	
 			});
