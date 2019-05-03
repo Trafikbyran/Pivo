@@ -254,7 +254,7 @@
 </head>
 <body>
 	<button onclick="saveer()">Spara</button>
-	<input type="text" class="amount" value="20000">
+	<input type="text" class="amount" value="0">
 	<span class="date"></span>
 	<ul id="main">
 		

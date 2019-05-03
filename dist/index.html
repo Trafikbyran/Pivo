@@ -56,7 +56,7 @@
 						} 
 						
 						var beer = {
-							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.style) + '" data-rating="' + value.avgrate + '">',
+							output: '<li class="pivo ' + value.sort + '" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.style) + '" data-rating="' + value.avgrate + '">',
 							rating: value.avgrate,
 							apk: apk,
 						};
@@ -151,6 +151,23 @@
 				$(this).removeClass('flagg-beer');
 				$(this).addClass('flagged-beer');
 				$(this).text('Väntande');
+			})
+			$('.hide').click(function(e){
+				$(this).toggleClass('active');
+				var sortType = $(this).attr('sort-type');
+				if(sortType == 'FS'){
+					if($(this).hasClass('active')){
+						$('.pivo.FS').removeClass('sortiment-hide');
+					}else {
+						$('.pivo.FS').addClass('sortiment-hide');
+					}
+				} else {
+					if($(this).hasClass('active')){
+						$('.pivo:not(.FS)').removeClass('sortiment-hide');
+					}else {
+						$('.pivo:not(.FS)').addClass('sortiment-hide');
+					}
+				}
 			})
 			$('.sort').click(function(e){
 				$('.sort').removeClass('active')
@@ -280,7 +297,6 @@
 			height: 100vh;
 		}
 		#main {
-			min-height: 90vh;
 			margin: 0;
 			padding: 0;
 			display: -webkit-flex;
@@ -293,8 +309,6 @@
 			-ms-flex-wrap: wrap;
 			-o-flex-wrap: wrap;
 			flex-wrap: wrap;
-			-ms-align-items: center;
-			align-items: center;
 			justify-content: center;
 		}
 		#filter, #sort {
@@ -302,7 +316,24 @@
 			max-width: 80%;
 			margin: 20px auto;
 		}
+		#sort {
+			display: -webkit-flex;
+			display: -moz-flex;
+			display: -ms-flex;
+			display: -o-flex;
+			display: flex;
+			-webkit-flex-wrap: wrap;
+			-moz-flex-wrap: wrap;
+			-ms-flex-wrap: wrap;
+			-o-flex-wrap: wrap;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+		#sort>div {
+			margin: 0 25px;
+		}
 		.pivo {
+			position: relative;
 			list-style: none;
 			background: #333;
 			min-height: 260px;
@@ -326,12 +357,24 @@
 			justify-content: flex-start;
 			font-family: 'Helvetica';
 		}
-		.pivo.hide {
+		.pivo.FS:before {
+			position: absolute;
+			padding: 7px 100px 7px;
+			background-color: #fff;
+			color: #000;
+			left: -93px;
+			top: 3px;
+			content: 'FS';
+			font-size: 0.85em;
+			transform: rotate(-45deg);
+		}
+		.pivo.hide, .pivo.sortiment-hide {
 			width: 0;
 			height: 0;
 			min-height: 0;
 			padding: 0;
 			margin: 0;
+			border: 0;
 		}
 		@media screen and (min-width: 467px) {
 			.pivo {
@@ -408,7 +451,7 @@
 			background: transparent;
 			color: #333;
 		}
-		.sort {
+		.sort, .hide {
 			display: inline-block;
 			border: 2px solid #333;
 			background: transparent;
@@ -417,7 +460,7 @@
 			margin: 3px;
 			cursor: pointer;
 		}
-		.sort.active {
+		.sort.active, .hide.active {
 			background: #333;
 			color: #fff;
 		}
@@ -472,8 +515,14 @@
 <body>
 	<span class="date"></span>
 	<div id="sort">
-		<span class="sort" sort-type="apk">Sortera efter APK</span>
-		<span class="sort active" sort-type="rating">Sortera efter Rating</span>
+		<div class="sortiment">
+			<span class="hide active" sort-type="FS">Ordinarie Sortiment</span>
+			<span class="hide active" sort-type="OS">Övrigt Sortiment</span>
+		</div>
+		<div class="listings">
+			<span class="sort" sort-type="apk">Sortera efter APK</span>
+			<span class="sort active" sort-type="rating">Sortera efter Rating</span>
+		</div>
 	</div>
 	<div id="debug"></div>
 	<div class="filter styles hidden">
