@@ -178,8 +178,8 @@
 			var y = $('.amount').val();
 			var savedBeers = Array();
 			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
-
-			var dateOffset = (24*60*60*1000) * 355; //last number is days
+			console.log(phpxml.length);
+			var dateOffset = (24*60*60*1000) * 655; //last number is days
 			var myDate = new Date();
 			myDate.setTime(myDate.getTime() - dateOffset);
 			myDate = myDate / 1000;
