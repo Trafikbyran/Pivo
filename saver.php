@@ -140,6 +140,7 @@
 				"subline": systemet.subline,
 				"brewery": systemet.brewery,
 				"type": systemet.type,
+				"style": systemet.style,
 				"pris": systemet.pris,
 				"volym": systemet.volym,
 				"packing": systemet.packing,
@@ -162,6 +163,7 @@
 				"subline": systemet.subline,
 				"brewery": systemet.brewery,
 				"type": systemet.type,
+				"style": systemet.style,
 				"pris": systemet.pris,
 				"volym": systemet.volym,
 				"packing": systemet.packing,
@@ -179,7 +181,7 @@
 			var savedBeers = Array();
 			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
 			console.log(phpxml.length);
-			var dateOffset = (24*60*60*1000) * 655; //last number is days
+			var dateOffset = (24*60*60*1000) * 1200; //last number is days
 			var myDate = new Date();
 			myDate.setTime(myDate.getTime() - dateOffset);
 			myDate = myDate / 1000;
@@ -190,7 +192,6 @@
 					savedBeers[key] = value;
 				});
 				$.each(phpxml,function(key,value){
-
 					var sale = new Date(value.Saljstart) /1000;
 					if (sale > myDate){
 						if(typeof value.Namn2 != 'string'){
@@ -203,6 +204,7 @@
 							subline: value.Namn2,
 							brewery: value.Producent,
 							type: value.Typ,
+							style: value.Stil,
 							pris: value.Prisinklmoms,
 							volym: value.Volymiml,
 							packing: value.Forpackning,

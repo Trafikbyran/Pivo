@@ -16,7 +16,6 @@
 	  firebase.initializeApp(config);
 	</script>
 	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
-	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 	<script>
 		$( document ).ready(function() {
 			$('.ui-loader').remove();
@@ -38,8 +37,12 @@
 						
 					} 
 					else if(value.updated == true) {
-						if ($.inArray(value.type, styles) == -1){
-							styles.push(value.type);
+						if(!value.style){
+							value.style = 'Ospecificerat';
+						}
+
+						if ($.inArray(value.style, styles) == -1){
+							styles.push(value.style);
 						}
 						if ($.inArray(value.brewery, breweries) == -1){
 							breweries.push(value.brewery);
@@ -51,13 +54,14 @@
 							apk = apk * parseInt(value.volym);
 							apk = apk / parseInt(value.pris);
 						} 
+						
 						var beer = {
-							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.type) + '" data-rating="' + value.avgrate + '">',
+							output: '<li class="pivo" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.style) + '" data-rating="' + value.avgrate + '">',
 							rating: value.avgrate,
 							apk: apk,
 						};
 
-						beer.output += '<span class="type">' + value.type + '</span>' ;
+						beer.output += '<span class="type">' + value.style + '</span>' ;
 						beer.output += '<strong>' + value.name + '<i> - ' +  value.subline + '</i>'; 
 						beer.output += '<span> | ' + value.alch + '</span></strong>';
 						beer.output += '<span> av: ' + value.brewery + ' - ' + value.origin + '</span>';
@@ -192,13 +196,10 @@
 				searchRating(beerName, beerSubline, beerId, beerUrl, target);
 			})
 
-			$( "#main" ).on( "swiperight", function(){
-				$('.filter').removeClass('hidden');
-				$('body, html').addClass('stil');
-			});
-			$( ".filter" ).on( "swipeleft", function(){
-				$('.filter').addClass('hidden');
-				$('body, html').removeClass('stil');
+			$( ".menu-toggle" ).on( "click", function(){
+				$('.filter').toggleClass('hidden');
+				$('body, html').toggleClass('stil');
+				$(this).toggleClass('open');
 			});
 			
 			function searchRating(dataname, datasubline, dataid, dataurl, target){
@@ -262,6 +263,9 @@
 		});
 	</script>
 	<style>
+		* {
+			-webkit-font-smoothing: antialiased;
+		}
 		*:focus {
 			outline: 0;
 		}
@@ -448,6 +452,18 @@
 		.flagged-beer {
 			text-decoration: line-through;
 		}
+		.menu-toggle {
+			position: fixed;
+			right: 35px;
+			top: 15px;
+			transform: rotate(90deg);
+			font-size: 30px;
+			cursor: pointer;
+			transition: 0.18s;
+		}
+		.menu-toggle.open{
+			transform: rotate(0);
+		}
 		
 	</style>
 	<meta charset="UTF-8">
@@ -463,6 +479,7 @@
 	<div class="filter styles hidden">
 		<span class="show-all-styles show-all filter-type">Alla</span>
 	</div>
+	<div class="menu-toggle">|||</div>
 	<ul id="main">
 	</ul>
 </body>
