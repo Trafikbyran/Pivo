@@ -20,7 +20,7 @@
 		$xml = new SimpleXMLElement(file_get_contents('https://www.systembolaget.se/api/assortment/products/xml'));
 		$beer = [];
 		foreach ($xml->artikel as $key => $value) {
-			if($value->Varugrupp == 'Öl' && $value->Utgått == '0' && $value->Sortiment == 'FS') {
+						if($value->Varugrupp == 'Öl' && $value->Utgått == '0'/* && $value->Sortiment == 'FS'*/) {
 				$beer[] = $value; 
 			}
 		}
@@ -97,6 +97,7 @@
 				console.log(apibeer);
 				var match = matcher(systemet,apibeer);
 				if(match < 1){
+					console.log('good match');
 					saveToDB(systemet,apibeer);
 				} 
 				else {
@@ -150,6 +151,7 @@
 				"image": apibeer.imageUrl,
 				"ratebeername": apibeer.name, 
 				"updated": true,
+				"new" : true
 			});
 			console.log('saved to DB');
 		}
@@ -167,75 +169,90 @@
 				"alch": systemet.alch,
 				"sort": systemet.sort,
 				"updated": false,
+				"new" : true
 			});
 			console.log('saved to DB - not complete');
 		}
-		$( document ).ready(function() {
-			
+		function saveer(){
+			i = 0;
+			var y = $('.amount').val();
 			var savedBeers = Array();
 			var phpxml = JSON.parse('<?php echo json_encode($beer,JSON_HEX_APOS|JSON_HEX_QUOT); ?>');
-						
-			var y = 80000;
+
+			var dateOffset = (24*60*60*1000) * 355; //last number is days
+			var myDate = new Date();
+			myDate.setTime(myDate.getTime() - dateOffset);
+			myDate = myDate / 1000;
+
 			console.log('started');
 			database.ref('beers/').once('value').then(function(snapshot) {
 				$.each(snapshot.val(), function(key, value){
 					savedBeers[key] = value;
 				});
 				$.each(phpxml,function(key,value){
-					
-					if(typeof value.Namn2 != 'string'){
-						value.Namn2 = '';
-					}
-					var beer = {
-						id: value.Artikelid,
-						art: value.Varnummer,
-						name: value.Namn,
-						subline: value.Namn2,
-						brewery: value.Producent,
-						type: value.Typ,
-						pris: value.Prisinklmoms,
-						volym: value.Volymiml,
-						packing: value.Forpackning,
-						origin: value.Ursprunglandnamn,
-						alch: value.Alkoholhalt,
-						sort: value.Sortiment,
-					}
-					var querys = [];
-					if(!savedBeers[parseInt(beer.id)] || !savedBeers[parseInt(beer.id)]['updated']){
-						i = i + 4000;
-						if(i > y){
-							return;
+
+					var sale = new Date(value.Saljstart) /1000;
+					if (sale > myDate){
+						if(typeof value.Namn2 != 'string'){
+							value.Namn2 = '';
 						}
-						setTimeout(function(){
-							console.log('----------------------');
-							if(beer.subline){
-								querys = [
-									searchString(beer.name + ' ' + beer.subline + ' ' + beer.brewery),
-									searchString(beer.name + ' ' + beer.subline),
-									searchString(beer.brewery + ' ' + beer.subline),
-									searchString(beer.name + ' ' + beer.brewery),
-									searchString(beer.subline),
-									searchString(beer.name),
-								]
-							}else {
-								querys = [
-									searchString(beer.name + ' ' + beer.brewery),
-									searchString(beer.name),
-								]
+						var beer = {
+							id: value.Artikelid,
+							art: value.Varnummer,
+							name: value.Namn,
+							subline: value.Namn2,
+							brewery: value.Producent,
+							type: value.Typ,
+							pris: value.Prisinklmoms,
+							volym: value.Volymiml,
+							packing: value.Forpackning,
+							origin: value.Ursprunglandnamn,
+							alch: value.Alkoholhalt,
+							sort: value.Sortiment,
+						}
+						var querys = [];
+						if(!savedBeers[parseInt(beer.id)] /*|| !savedBeers[parseInt(beer.id)]['updated']*/){
+							i = i + 5500;
+							if(i > y){
+								// console.log('amount left');
+								return;
+
 							}
-							rateBeerCall(beer,querys,0,switcher);
-						},i);
-					} else {
-						console.log('already saved');
+							setTimeout(function(){
+								console.log('----------------------');
+								if(beer.subline){
+									querys = [
+										searchString(beer.name + ' ' + beer.subline + ' ' + beer.brewery),
+										searchString(beer.name + ' ' + beer.subline),
+										searchString(beer.brewery + ' ' + beer.subline),
+										searchString(beer.name + ' ' + beer.brewery),
+										searchString(beer.subline),
+										searchString(beer.name),
+									]
+								}else {
+									querys = [
+										searchString(beer.name + ' ' + beer.brewery),
+										searchString(beer.name),
+									]
+								}
+								rateBeerCall(beer,querys,0,switcher);
+							},i);
+						} else {
+							console.log('already saved');
+						}
 					}
 				})	
 			});
+		};
+		$( document ).ready(function() {
 		});
 	</script>
 	<meta charset="UTF-8">
 	<title>Pivo - saver</title>
 </head>
 <body>
+	<button onclick="saveer()">Spara</button>
+	<input type="text" class="amount" value="20000">
 	<span class="date"></span>
 	<ul id="main">
 		
