@@ -330,7 +330,9 @@
 			justify-content: center;
 		}
 		#sort>div {
-			margin: 0 25px;
+			margin: 0 25px 10px;
+			border-bottom: 1px solid rgba(0,0,0,0.18);
+			padding-bottom: 10px;
 		}
 		.pivo {
 			position: relative;
@@ -467,9 +469,9 @@
 		.filter {
 			z-index: 100;
 		    background: #efefef;
-		    height: 100vh;
+		    height: calc(100% - 20px);
 		    top: 0;
-		    width: calc(100% - 20px );
+		    width: calc(80% - 20px );
 		    max-width: 500px;
 		    overflow-y: scroll;
 		    position: fixed;
@@ -477,6 +479,9 @@
 		    left: 0;
 		    -webkit-overflow-scrolling: touch; /* Lets it scroll lazy */
 		    transition: left 0.18s;
+			-webkit-box-shadow: 10px 0px 24px 4px rgba(0,0,0,0.17);
+			-moz-box-shadow: 10px 0px 24px 4px rgba(0,0,0,0.17);
+			box-shadow: 10px 0px 24px 4px rgba(0,0,0,0.17) 
 		}.filter.hidden{
 			width: 90%;
 			left: calc(-100% - 25px );
