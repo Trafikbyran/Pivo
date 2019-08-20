@@ -59,6 +59,7 @@
 							output: '<li class="pivo ' + value.sort + '" data-price="' + parseInt(value.pris) + '" data-brewery="' + convertToSlug(value.brewery) + '" data-style="' + convertToSlug(value.style) + '" data-rating="' + value.avgrate + '">',
 							rating: value.avgrate,
 							apk: apk,
+							date: value.date
 						};
 
 						beer.output += '<span class="type">' + value.style + '</span>' ;
@@ -75,6 +76,15 @@
 						beer.output += '<a href="https://www.ratebeer.com/search?q=' + value.ratebeername + '" target="_blank">RateBeer</a>';
 						beer.output += '<a href="https://www.systembolaget.se/sok-dryck/?searchquery=' + value.name +  ' ' + value.art + '" target="_blank">Röda näsan</a></div>';
 						beer.output += '<div class="response"><div class="rating">' + (Math.round(value.avgrate * 10) / 10 ) + '<span>på ' + value.ratecount + ' ratings</span><span>' + value.ratebeername + '</span>';
+						var date = new Date(value.date);
+						var year = date.getFullYear();
+						if(date.getMonth() < 9){
+							var month = date.getMonth() + 1;
+							month = '0' + month;
+						} else {
+							var month = date.getMonth() + 1;
+						}
+						beer.output += '<span class="release">Released: '+  month + '/' + year + '</span>';
 						beer.output += '<span class="flagg-beer" data-id="' + key + '">Uppdatera</span>';
 						beer.output += '</div></div></lI>';
 						beerlist.push(beer);
@@ -107,6 +117,7 @@
 			function flagBeer(id){
 				database.ref('beers/' + id).update({ 
 					"updated": false,
+					"ratebeername" : ''
 				});
 			}
 			function SortByName(a, b){
@@ -116,16 +127,60 @@
 			}
 			function sortNprint(list, sortType){
 				$('#main').html('');
+				console.log(sortType);
+				list.sort(function(a , b){
+					return b.rating - a.rating;
+				});
 				if(sortType == 'apk'){
 					list.sort(function(a , b){
 						return b.apk - a.apk;
 					});
-				} else {
+				}
+				if (sortType == 'date'){
 					list.sort(function(a , b){
-						return b.rating - a.rating;
+						return new Date(b.date).getTime() - new Date(a.date).getTime();
 					});
 				}
+				// var theMonth = new Date($.now());
+				// console.log(theMonth.getMonth() + 1);
+				var date = new Date($.now());
+				if(date.getMonth() < 9){
+					var month = date.getMonth() + 1;
+					month = '0' + month;
+				} else {
+					var month = date.getMonth() + 1;
+					month = month.toString();
+				}
+				var year = date.getFullYear().toString();
+				var thismonth = year + month;
+				var lastRelease = thismonth;
 				$.each(list, function(i, val){
+					if (sortType == 'date'){
+						var date = new Date(val.date);
+						if(date.getMonth() < 9){
+							var month = date.getMonth() + 1;
+							month = '0' + month;
+						} else {
+							var month = date.getMonth() + 1;
+							month = month.toString();
+						}
+						var year = date.getFullYear().toString();
+						var release = year + month;
+						// console.log('this release: ' + release + ' | Last release: ' + lastRelease );
+						if(parseInt(release) < parseInt(lastRelease)){
+							$("#main").append('<span class="date-title">' + date.getFullYear() + '/' + (parseInt(date.getMonth()) + 1) + '</span>');
+							// console.log('this release: ' + release + ' is not the same month as Last release: ' + lastRelease );
+							lastRelease = release;
+						}
+						else if (parseInt(release) == parseInt(thismonth)) {
+							$("#main").append('<span class="date-title">' + date.getFullYear() + '/' + (parseInt(date.getMonth()) + 1) + '</span>');
+							thismonth = null;
+						}
+						// if(parseInt(release) < parseInt(lastRelease)){
+						// 	console.log(release);
+						// }
+						
+					}
 					$("#main").append(val.output);
 				})
 				$('.filter-type, .pivo').addClass('hide');
@@ -173,6 +228,7 @@
 				$('.sort').removeClass('active')
 				$(this).addClass('active');
 				sortNprint(beerlist, $(event.target).attr('sort-type'));
+				console.log($(event.target).attr('sort-type'));
 			})
 
 			$('.filter.styles').on('click','.filter-type', function(e){
@@ -333,6 +389,24 @@
 			margin: 0 25px 10px;
 			border-bottom: 1px solid rgba(0,0,0,0.18);
 			padding-bottom: 10px;
+		}
+		.date-title {
+			display: block;
+			width: 100%;
+			text-align: center;
+			position: relative;
+			padding: 6px 15px;
+			margin: 25px 0;
+		}
+		.date-title:after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			display: block;
+			width: 150px;
+			border-bottom: 1px solid gold;
 		}
 		.pivo {
 			position: relative;
@@ -527,6 +601,7 @@
 		<div class="listings">
 			<span class="sort" sort-type="apk">Sortera efter APK</span>
 			<span class="sort active" sort-type="rating">Sortera efter Rating</span>
+			<span class="sort" sort-type="date">Sortera efter Släpp datum</span>
 		</div>
 	</div>
 	<div id="debug"></div>
