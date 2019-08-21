@@ -35,14 +35,15 @@
 				// if($value->Sortiment == 'FS'){
 				// 	$beer[] = $value;
 				// }
-				 if($value->Sortiment == 'BS' or $value->Sortiment == 'TSLS' or  $value->Sortiment == 'TSE'){
+				 if($value->Sortiment == 'BS' /* or $value->Sortiment == 'TSLS' */ or  $value->Sortiment == 'TSE'){
 					$lanuched = strtotime($value->Saljstart);
 					$monthago = time()-60 * 60 * 24;
+					$monthsago = time()-60 * 60 * 24 * 6;
 					$yearago = time()-60 * 60 * 24 * 12;
-					$twoyearago = time()-60 * 60 * 24 * 12 * 2;
+					$yearsago = time()-60 * 60 * 24 * 24;
 					
 
-					if($lanuched > $twoyearago){
+					if($lanuched > $yearsago){
 						$beer[] = $value;
 					}
 					
@@ -224,11 +225,11 @@
 					}
 					var beer = {
 						id: value.Artikelid,
-						art: value.Varnummer,
 						name: value.Namn,
-						date: new Date(value.Saljstart),
 						subline: value.Namn2,
 						brewery: value.Producent,
+						art: value.Varnummer,
+						date: new Date(value.Saljstart),
 						type: value.Typ,
 						style: value.Stil,
 						pris: value.Prisinklmoms,
